@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AKI - El Chatbot Definitivo con IA">
+    <meta name="theme-color" content="#0f172a">
+    <title>AKI - Chatbot Inteligente</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Estilos principales -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Panel lateral -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <div class="logo">
+                        <i class="fas fa-brain"></i>
+                        <span>AKI</span>
+                    </div>
+                    <div class="version">v1.0</div>
+                </div>
+                <button class="new-chat-btn" id="newChatBtn">
+                    <i class="fas fa-plus"></i>
+                    <span>Nueva Conversación</span>
+                </button>
+            </div>
+
+            <div class="conversations-container" id="conversationsContainer">
+                <div class="empty-state">
+                    <i class="fas fa-comments"></i>
+                    <p>Sin conversaciones aún</p>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <button class="sidebar-btn user-menu-btn" id="userMenuBtn">
+                    <i class="fas fa-user-circle"></i>
+                    <span id="userNameDisplay">Usuario</span>
+                </button>
+                <button class="sidebar-btn settings-btn">
+                    <i class="fas fa-cog"></i>
+                    <span>Configuración</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Área principal -->
+        <main class="main-content">
+            <!-- Área de chat -->
+            <div class="chat-area">
+                <div class="quick-actions-bar">
+                    <button class="action-pill menu-btn" id="back-to-menu-btn">
+                        <i class="fas fa-compass"></i>
+                        <span>Volver al menu</span>
+                    </button>
+                    <button class="action-pill emergency-btn" id="emergencies-btn">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Emergencias</span>
+                    </button>
+                    <button class="action-pill contact-btn" id="contact-doctor-btn">
+                        <i class="fas fa-stethoscope"></i>
+                        <span>Contacto Doctor</span>
+                    </button>
+                </div>
+                <div class="messages-container" id="messagesContainer">
+                    <div class="welcome-section">
+                        <div class="welcome-content">
+                            <div class="welcome-icon">
+                                <i class="fas fa-sparkles"></i>
+                            </div>
+                            <h1>Bienvenido a AKI</h1>
+                            <p>Tu asistente inteligente basado en IA</p>
+                            
+                            <div class="quick-prompts">
+                                <button class="prompt-card" data-prompt="Explícame cómo funcionas">
+                                    <i class="fas fa-robot"></i>
+                                    <span>¿Cómo funcionas?</span>
+                                </button>
+                                <button class="prompt-card" data-prompt="Cuéntame un dato interesante">
+                                    <i class="fas fa-lightbulb"></i>
+                                    <span>Dato interesante</span>
+                                </button>
+                                <button class="prompt-card" data-prompt="Ayuda con programación">
+                                    <i class="fas fa-code"></i>
+                                    <span>Programación</span>
+                                </button>
+                                <button class="prompt-card" data-prompt="Escribe un poema creativo">
+                                    <i class="fas fa-feather"></i>
+                                    <span>Poema creativo</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input de chat -->
+                <div class="chat-input-area">
+                    <form class="chat-form" id="chatForm">
+                        <div class="input-wrapper">
+                            <textarea 
+                                id="messageInput" 
+                                class="message-input" 
+                                placeholder="Escribe un mensaje..." 
+                                rows="1"
+                            ></textarea>
+                            <div class="input-actions">
+                                <button type="button" class="action-btn" id="attachBtn" title="Adjuntar archivo">
+                                    <i class="fas fa-paperclip"></i>
+                                </button>
+                                <button type="button" class="action-btn" id="voiceBtn" title="Enviar por voz">
+                                    <i class="fas fa-microphone"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="submit" class="send-btn" id="sendBtn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal de login/registro -->
+    <div class="auth-modal" id="authModal">
+        <div class="auth-container">
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="login">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Iniciar sesión
+                </button>
+                <button class="auth-tab" data-tab="register">
+                    <i class="fas fa-user-plus"></i>
+                    Registrarse
+                </button>
+            </div>
+
+            <!-- Login -->
+            <form class="auth-form active" id="loginForm" data-form="login">
+                <h2>Bienvenido de vuelta</h2>
+                <input type="email" placeholder="Email" required>
+                <input type="password" placeholder="Contraseña" required>
+                <button type="submit" class="auth-btn">Iniciar sesión</button>
+                <a href="#" class="forgot-password">¿Olvidaste tu contraseña?</a>
+            </form>
+
+            <!-- Registro -->
+            <form class="auth-form" id="registerForm" data-form="register">
+                <h2>Únete a AKI</h2>
+                <input type="text" placeholder="Nombre completo" required>
+                <input type="email" placeholder="Email" required>
+                <input type="password" placeholder="Contraseña" required>
+                <input type="password" placeholder="Confirmar contraseña" required>
+                <button type="submit" class="auth-btn">Crear cuenta</button>
+                <p class="terms">Al registrarte, aceptas nuestros términos de servicio</p>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================== MODAL DE MENU ================== -->
+    <div class="modal menu-modal" id="menu-modal">
+        <div class="modal-content">
+            <button class="modal-close" id="close-menu">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <div class="modal-header menu-header">
+                <i class="fas fa-compass"></i>
+                <h2>Menu Principal</h2>
+                <p>Elige una opcion rapida para continuar</p>
+            </div>
+
+            <div class="menu-prompts">
+                <button class="prompt-card" data-prompt="Explícame cómo funcionas">
+                    <i class="fas fa-robot"></i>
+                    <span>¿Cómo funcionas?</span>
+                </button>
+                <button class="prompt-card" data-prompt="Cuéntame un dato interesante">
+                    <i class="fas fa-lightbulb"></i>
+                    <span>Dato interesante</span>
+                </button>
+                <button class="prompt-card" data-prompt="Ayuda con programación">
+                    <i class="fas fa-code"></i>
+                    <span>Programación</span>
+                </button>
+                <button class="prompt-card" data-prompt="Escribe un poema creativo">
+                    <i class="fas fa-feather"></i>
+                    <span>Poema creativo</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================== MODAL DE EMERGENCIAS ================== -->
+    <div class="modal emergencies-modal" id="emergencies-modal">
+        <div class="modal-content">
+            <button class="modal-close" id="close-emergencies">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <div class="modal-header emergency-header">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h2>Centro de Emergencias</h2>
+            </div>
+
+            <!-- Tabs -->
+            <div class="modal-tabs">
+                <button class="modal-tab active" data-tab="emergency-911">
+                    <i class="fas fa-phone"></i>
+                    911 Emergencia
+                </button>
+                <button class="modal-tab" data-tab="emergency-hospitals">
+                    <i class="fas fa-hospital"></i>
+                    Hospitales
+                </button>
+                <button class="modal-tab" data-tab="emergency-manual">
+                    <i class="fas fa-book"></i>
+                    Manual de Vida
+                </button>
+            </div>
+
+            <!-- Contenido 911 -->
+            <div class="modal-tab-content active" data-tab="emergency-911">
+                <div class="emergency-911-section">
+                    <div class="call-box">
+                        <i class="fas fa-phone-alt"></i>
+                        <h3>Llamar al 911</h3>
+                        <p>Larga desde tu celular para emergencias médicas inmediatas</p>
+                        <a href="tel:911" class="emergency-call-btn" aria-label="Llamar al 911">
+                            <i class="fas fa-phone"></i>
+                            Llamar al 911
+                        </a>
+                    </div>
+                    <div class="emergency-info">
+                        <h4>¿Cuándo llamar?</h4>
+                        <div class="emergency-reasons">
+                            <div class="reason-card">
+                                <i class="fas fa-heartbeat"></i>
+                                <span>Dolor severo en el pecho</span>
+                            </div>
+                            <div class="reason-card">
+                                <i class="fas fa-lungs"></i>
+                                <span>Dificultad para respirar</span>
+                            </div>
+                            <div class="reason-card">
+                                <i class="fas fa-face-dizzy"></i>
+                                <span>Pérdida de conciencia</span>
+                            </div>
+                            <div class="reason-card">
+                                <i class="fas fa-bolt"></i>
+                                <span>Convulsiones</span>
+                            </div>
+                            <div class="reason-card">
+                                <i class="fas fa-car-burst"></i>
+                                <span>Accidentes graves</span>
+                            </div>
+                            <div class="reason-card">
+                                <i class="fas fa-droplet"></i>
+                                <span>Sangrado severo</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenido Hospitales -->
+            <div class="modal-tab-content" data-tab="emergency-hospitals">
+                <div class="hospitals-list">
+                    <div class="hospital-card">
+                        <i class="fas fa-hospital"></i>
+                        <h4>Hospital Madariaga</h4>
+                        <p class="hospital-location">📍 Posadas, Misiones</p>
+                        <p class="hospital-phone">📞 (376) XXXXX</p>
+                        <button class="hospital-btn" onclick="window.open('https://maps.google.com/?q=Hospital+Madariaga+Posadas')">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Ver en Mapa
+                        </button>
+                    </div>
+
+                    <div class="hospital-card">
+                        <i class="fas fa-hospital"></i>
+                        <h4>Hospital Favaloro</h4>
+                        <p class="hospital-location">📍 Posadas, Misiones</p>
+                        <p class="hospital-phone">📞 (376) XXXXX</p>
+                        <button class="hospital-btn" onclick="window.open('https://maps.google.com/?q=Hospital+Favaloro+Posadas')">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Ver en Mapa
+                        </button>
+                    </div>
+
+                    <div class="hospital-card">
+                        <i class="fas fa-hospital"></i>
+                        <h4>Centro Médico Posadas</h4>
+                        <p class="hospital-location">📍 Posadas, Misiones</p>
+                        <p class="hospital-phone">📞 (376) XXXXX</p>
+                        <button class="hospital-btn" onclick="window.open('https://maps.google.com/?q=Centro+Medico+Posadas')">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Ver en Mapa
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenido Manual de Vida -->
+            <div class="modal-tab-content" data-tab="emergency-manual">
+                <div class="manuals-container">
+                    <!-- Manual 1: Paro Cardíaco -->
+                    <div class="manual-item">
+                        <button class="manual-header" onclick="this.nextElementSibling.classList.toggle('open')">
+                            <i class="fas fa-heart-pulse"></i>
+                            <span>Paro Cardíaco</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="manual-content">
+                            <div class="steps">
+                                <div class="step">
+                                    <div class="step-number">1</div>
+                                    <div class="step-content">
+                                        <strong>Llama al 911 inmediatamente</strong>
+                                        <p>Es lo más importante. No esperes ni intentes transportar a la persona.</p>
+                                    </div>
+                                </div>
+                                <div class="step">
+                                    <div class="step-number">2</div>
+                                    <div class="step-content">
+                                        <strong>Verifica conciencia y respiración</strong>
+                                        <p>Toca sus hombros y habla fuerte. ¿Respira? ¿Tiene pulso?</p>
+                                    </div>
+                                </div>
+                                <div class="step">
+                                    <div class="step-number">3</div>
+                                    <div class="step-content">
+                                        <strong>Inicia RCP (Reanimación Cardiopulmonar)</strong>
+                                        <p>Coloca la palma en el centro del pecho, intercala con la otra mano. Presiona fuerte y rápido (100-120 compresiones por minuto).</p>
+                                    </div>
+                                </div>
+                                <div class="step">
+                                    <div class="step-number">4</div>
+                                    <div class="step-content">
+                                        <strong>Boca a boca (si sabes)</strong>
+                                        <p>Después de 30 compresiones, respira en su boca 2 veces. Repite el ciclo.</p>
+                                    </div>
+                                </div>
+                                <div class="step">
+                                    <div class="step-number">5</div>
+                                    <div class="step-content">
+                                        <strong>Busca un DEA (Desfibrilador)</strong>
+                                        <p>Si hay uno disponible en el lugar, úsalo siguiendo las instrucciones de voz.</p>
+                                    </div>
+                                </div>
+                                <div class="step">
+                                    <div class="step-number">6</div>
+                                    <div class="step-content">
+                                        <strong>NO DEJES DE HACER RCP</strong>
+                                        <p>Continúa hasta que llegue la ambulancia o la persona recupere el conocimiento.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Manual 2: Ataque de Epilepsia -->
+                    <div class="manual-item">
+                        <button class="manual-header" onclick="this.nextElementSibling.classList.toggle('open')">
+                            <i class="fas fa-bolt"></i>
+                            <span>Ataque de Epilepsia</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="manual-content">
+                            <div class="steps">
+                                <div class="step">
+                                    <div class="step-number">1</div>
+                                    <div class="step-content">
+                                        <strong>Mantén la calma</strong>
+                                        <p>Respira profundo. La mayoría de convulsiones duran menos de 2-3 minutos.</p>
+                                    </div>
+                                </div>
+                                <div class="step">
+                                    <div class="step-number">2</div>
+                                    <div class="step-content">
+                                        <strong>Retira objetos peligrosos</strong>
+                                        <p>Aleja muebles, vidrios u objetos duros del alcance de la persona.</p>
+                                    </div>
+                                </div>
+                                <div class="step">
+                                    <div class="step-number">3</div>
+                                    <div class="step-content">
+                                        <strong>Acuesta a la persona de lado</strong>
+                                        <p>Esto ayuda a que la vía aérea se mantenga abierta.</p>
+                                    </div>
+                                </div>
+                                <div class="step">
+                                    <div class="step-number">4</div>
+                                    <div class="step-content">
+                                        <strong>NO pongas nada en su boca</strong>
+                                        <p>Es un mito. Puedes lastimarlo. NO intentes sujetarla.</p>
+                                    </div>
+                                </div>
+                                <div class="step">
+                                    <div class="step-number">5</div>
+                                    <div class="step-content">
+                                        <strong>Protege su cabeza</strong>
+                                        <p>Coloca una almohada o algo suave bajo su cabeza.</p>
+                                    </div>
+                                </div>
+                                <div class="step">
+                                    <div class="step-number">6</div>
+                                    <div class="step-content">
+                                        <strong>Llama al 911 si:</strong>
+                                        <p>• La convulsión dura más de 5 minutos<br>
+                                        • Hay convulsiones seguidas<br>
+                                        • No recupera conciencia después<br>
+                                        • Se lastima</p>
+                                    </div>
+                                </div>
+                                <div class="step">
+                                    <div class="step-number">7</div>
+                                    <div class="step-content">
+                                        <strong>Después de la convulsión</strong>
+                                        <p>Quédate con la persona. Estará confundida y necesita apoyo. Tranquilízala con palabras calmadas.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Manual 3: Baja Presión -->
+                    <div class="manual-item">
+                        <button class="manual-header" onclick="this.nextElementSibling.classList.toggle('open')">
+                            <i class="fas fa-arrow-down"></i>
+                            <span>Baja Presión (Hipotensión)</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="manual-content">
+                            <div class="steps">
+                                <div class="step">
+                                    <div class="step-number">1</div>
+                                    <div class="step-content">
+                                        <strong>Siéntate o acuéstate inmediatamente</strong>
+                                        <p>Reduce el riesgo de desvanecimiento. Levanta las piernas para mejorar circulación.</p>
+                                    </div>
+                                </div>
+                                <div class="step">
+                                    <div class="step-number">2</div>
+                                    <div class="step-content">
+                                        <strong>Bebe agua lentamente</strong>
+                                        <p>Pequeños sorbos de agua a temperatura ambiente. Evita bebidas con cafeína o alcohol.</p>
+                                    </div>
+                                </div>
+                                <div class="step">
+                                    <div class="step-number">3</div>
+                                    <div class="step-content">
+                                        <strong>Come algo salado</strong>
+                                        <p>Pan, galletas saladas o frutos secos ayudan a retener líquidos.</p>
+                                    </div>
+                                </div>
+                                <div class="step">
+                                    <div class="step-number">4</div>
+                                    <div class="step-content">
+                                        <strong>No te levantes rápido</strong>
+                                        <p>Espera 5-10 minutos. Luego, incorporándote lentamente (siéntate primero, luego párate).</p>
+                                    </div>
+                                </div>
+                                <div class="step">
+                                    <div class="step-number">5</div>
+                                    <div class="step-content">
+                                        <strong>Descansa en lugar fresco</strong>
+                                        <p>Busca un lugar ventilado. Retira ropa innecesaria si te sientes sofocado.</p>
+                                    </div>
+                                </div>
+                                <div class="step">
+                                    <div class="step-number">6</div>
+                                    <div class="step-content">
+                                        <strong>Llama al doctor si:</strong>
+                                        <p>• El mareo persiste más de 1 hora<br>
+                                        • Tienes dificultad para respirar<br>
+                                        • Hay dolor en el pecho<br>
+                                        • Es frecuente (consulta un médico)</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================== MODAL DE CONTACTO DOCTOR ================== -->
+    <div class="modal contact-modal" id="contact-doctor-modal">
+        <div class="modal-content">
+            <button class="modal-close" id="close-contact">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <div class="modal-header contact-header">
+                <i class="fas fa-stethoscope"></i>
+                <h2>Contacto con Doctor</h2>
+                <p>Atención directa y consultas por receta</p>
+            </div>
+
+            <div class="contact-availability">
+                <div class="status-pill" id="contact-availability">
+                    <span class="status-dot" id="contact-availability-dot"></span>
+                    <span class="status-text" id="contact-availability-text">Verificando disponibilidad...</span>
+                </div>
+                <div class="status-hours">
+                    Horario: 08:00 - 19:00 · Hora actual: <span id="contact-current-time">--:--</span>
+                </div>
+            </div>
+
+            <div class="contact-grid">
+                <div class="contact-card">
+                    <div class="contact-card-header">
+                        <i class="fas fa-phone-volume"></i>
+                        <div>
+                            <h3>Teléfono directo</h3>
+                            <p>3765026029</p>
+                        </div>
+                    </div>
+                    <div class="contact-actions">
+                        <a class="contact-action-btn call" href="tel:3765026029">
+                            <i class="fas fa-phone"></i>
+                            Llamar ahora
+                        </a>
+                        <a class="contact-action-btn whatsapp" href="https://wa.me/3765026029" target="_blank" rel="noopener">
+                            <i class="fab fa-whatsapp"></i>
+                            WhatsApp
+                        </a>
+                    </div>
+                    <p class="contact-note">Responde consultas rápidas y orientación inicial.</p>
+                </div>
+
+                <div class="contact-card">
+                    <div class="contact-card-header">
+                        <i class="fas fa-envelope"></i>
+                        <div>
+                            <h3>Consulta de receta</h3>
+                            <p>Enviar por correo</p>
+                        </div>
+                    </div>
+                    <form class="contact-form" action="https://formspree.io/f/xreaeoez" method="POST">
+                        <div class="form-row">
+                            <input type="text" name="nombre" placeholder="Nombre y apellido" required>
+                            <input type="email" name="_replyto" placeholder="Tu correo" required>
+                        </div>
+                        <input type="text" name="medicacion" placeholder="Medicacion o receta" required>
+                        <textarea name="mensaje" rows="4" placeholder="Detalle de la consulta" required></textarea>
+                        <button type="submit" class="contact-action-btn email">
+                            <i class="fas fa-paper-plane"></i>
+                            Enviar consulta
+                        </button>
+                    </form>
+                    <p class="contact-note">Recibirás respuesta en horario de atención.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================== MODAL DE PERFIL DE USUARIO ================== -->
+    <div class="modal user-profile-modal" id="user-profile-modal">
+        <div class="modal-content profile-content">
+            <button class="modal-close" id="close-profile">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <button class="logout-btn" id="logout-btn">
+                <span>CERRAR SESIÓN</span>
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+
+            <div class="profile-header">
+                <div class="profile-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <h2>Mi Perfil</h2>
+            </div>
+
+            <div class="profile-data">
+                <div class="profile-field">
+                    <label>Nombre Completo</label>
+                    <div class="field-value">
+                        <i class="fas fa-user"></i>
+                        <span id="profile-nombre">Juan Carlos Pérez</span>
+                    </div>
+                </div>
+
+                <div class="profile-field">
+                    <label>DNI</label>
+                    <div class="field-value">
+                        <i class="fas fa-id-card"></i>
+                        <span id="profile-dni">12.345.678</span>
+                    </div>
+                </div>
+
+                <div class="profile-field">
+                    <label>Correo Electrónico</label>
+                    <div class="field-value">
+                        <i class="fas fa-envelope"></i>
+                        <span id="profile-email">juan.perez@email.com</span>
+                    </div>
+                </div>
+
+                <div class="profile-field">
+                    <label>Edad</label>
+                    <div class="field-value">
+                        <i class="fas fa-birthday-cake"></i>
+                        <span id="profile-edad">35 años</span>
+                    </div>
+                </div>
+
+                <div class="profile-field">
+                    <label>Número de Afiliado</label>
+                    <div class="field-value">
+                        <i class="fas fa-credit-card"></i>
+                        <span id="profile-afiliado">AFI-2024-001234</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================== MODAL DE CONFIGURACIÓN ================== -->
+    <div class="modal settings-modal" id="settings-modal">
+        <div class="modal-content settings-content">
+            <button class="modal-close" id="close-settings">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <div class="settings-header">
+                <i class="fas fa-cog"></i>
+                <h2>Configuración</h2>
+                <p>Personaliza tu experiencia con AKI</p>
+            </div>
+
+            <div class="settings-group">
+                <h3>🎨 Tema de Colores</h3>
+                <div class="color-options">
+                    <button class="color-btn active" data-theme="default" style="background: linear-gradient(135deg, #3b82f6, #2563eb);" title="Azul (Por defecto)"></button>
+                    <button class="color-btn" data-theme="purple" style="background: linear-gradient(135deg, #a855f7, #9333ea);" title="Morado"></button>
+                    <button class="color-btn" data-theme="green" style="background: linear-gradient(135deg, #10b981, #059669);" title="Verde"></button>
+                    <button class="color-btn" data-theme="red" style="background: linear-gradient(135deg, #ef4444, #dc2626);" title="Rojo"></button>
+                    <button class="color-btn" data-theme="pink" style="background: linear-gradient(135deg, #ec4899, #db2777);" title="Rosa"></button>
+                    <button class="color-btn" data-theme="cyan" style="background: linear-gradient(135deg, #06b6d4, #0891b2);" title="Cian"></button>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <h3>👴 Modo para Abuelos</h3>
+                <div class="toggle-setting">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="modo-abuelos" class="toggle-input">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="toggle-label">Interfaz más simple y grande</span>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <h3>🔤 Tamaño de Letra</h3>
+                <div class="slider-setting">
+                    <span>Pequeño</span>
+                    <input type="range" id="font-size-slider" min="12" max="20" value="16" class="settings-slider">
+                    <span>Grande</span>
+                    <div class="preview-text" id="font-preview">Texto de prueba</div>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <h3>☀️ Brillo</h3>
+                <div class="slider-setting">
+                    <span>Oscuro</span>
+                    <input type="range" id="brightness-slider" min="50" max="150" value="100" class="settings-slider">
+                    <span>Claro</span>
+                    <div class="brightness-indicator">Brillo: <span id="brightness-value">100%</span></div>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <h3>🎨 Modo para Daltónicos</h3>
+                <div class="colorblind-options">
+                    <button class="colorblind-btn active" data-mode="normal" title="Normal">Normal</button>
+                    <button class="colorblind-btn" data-mode="deuteranopia" title="Daltonismo Rojo-Verde">Rojo-Verde</button>
+                    <button class="colorblind-btn" data-mode="protanopia" title="Daltonismo Rojo">Rojo</button>
+                    <button class="colorblind-btn" data-mode="tritanopia" title="Daltonismo Azul-Amarillo">Azul-Amarillo</button>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <h3>💡 Guía de AKI</h3>
+                <button class="settings-action-btn" id="guide-btn">
+                    <i class="fas fa-question-circle"></i>
+                    Ver Tutorial
+                </button>
+            </div>
+
+            <div class="settings-footer">
+                <button class="settings-reset-btn" id="reset-settings">
+                    <i class="fas fa-redo"></i>
+                    Restaurar valores por defecto
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificaciones -->
+    <div class="notifications-container" id="notificationsContainer"></div>
+
+    <!-- Scripts -->
+    <script src="js/app.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/chat.js"></script>
+    <script src="js/ui.js"></script>
+        <script src="js/emergencies.js"></script>
+        <script src="js/userProfile.js"></script>
+        <script src="js/settings.js"></script>
+</body>
+</html>
