@@ -18,6 +18,7 @@ app.use(express.static('public'));
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/chat', require('./routes/chatRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/email', require('./routes/emailRoutes'));
 
 // Ruta principal
 app.get('/', (req, res) => {

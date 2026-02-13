@@ -548,13 +548,20 @@
                             <p>Enviar por correo</p>
                         </div>
                     </div>
-                    <form class="contact-form" action="https://formspree.io/f/xreaeoez" method="POST">
+                    <form class="contact-form" id="contact-form">
                         <div class="form-row">
                             <input type="text" name="nombre" placeholder="Nombre y apellido" required>
-                            <input type="email" name="_replyto" placeholder="Tu correo" required>
+                            <input type="email" name="email" placeholder="Tu correo" required>
                         </div>
                         <input type="text" name="medicacion" placeholder="Medicacion o receta" required>
                         <textarea name="mensaje" rows="4" placeholder="Detalle de la consulta" required></textarea>
+                        <div class="file-upload-container">
+                            <label for="archivos" class="file-upload-label">
+                                <i class="fas fa-paperclip"></i>
+                                <span id="file-label-text">Adjuntar fotos de receta (opcional)</span>
+                            </label>
+                            <input type="file" id="archivos" name="archivos" multiple accept="image/*,.pdf,.doc,.docx" style="display: none;">
+                        </div>
                         <button type="submit" class="contact-action-btn email">
                             <i class="fas fa-paper-plane"></i>
                             Enviar consulta

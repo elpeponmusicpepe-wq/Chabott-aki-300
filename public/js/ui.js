@@ -218,6 +218,76 @@ class UIManager {
 
         elements.forEach(el => observer.observe(el));
     }
+
+    // Manejar formulario de contacto
+    setupContactForm() {
+        const contactForm = document.getElementById('contact-form');
+        const fileInput = document.getElementById('archivos');
+        const fileLabelText = document.getElementById('file-label-text');
+        
+        if (!contactForm) return;
+
+        // Mostrar nombres de archivos seleccionados
+        if (fileInput) {
+            fileInput.addEventListener('change', (e) => {
+                const files = e.target.files;
+                if (files.length > 0) {
+                    const fileNames = Array.from(files).map(f => f.name).join(', ');
+                    fileLabelText.textContent = `${files.length} archivo(s): ${fileNames.substring(0, 30)}${fileNames.length > 30 ? '...' : ''}`;
+                } else {
+                    fileLabelText.textContent = 'Adjuntar fotos de receta (opcional)';
+                }
+            });
+        }
+
+        contactForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Usar FormData para enviar archivos
+            const formData = new FormData();
+            formData.append('nombre', contactForm.nombre.value);
+            formData.append('email', contactForm.email.value);
+            formData.append('medicacion', contactForm.medicacion.value);
+            formData.append('mensaje', contactForm.mensaje.value);
+
+            // Agregar archivos si existen
+            if (fileInput && fileInput.files.length > 0) {
+                for (let i = 0; i < fileInput.files.length; i++) {
+                    formData.append('archivos', fileInput.files[i]);
+                }
+            }
+
+            const submitBtn = contactForm.querySelector('button[type="submit"]');
+            const originalHTML = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+
+            try {
+                const response = await fetch('/api/email/contact', {
+                    method: 'POST',
+                    body: formData // No poner Content-Type, FormData lo maneja automáticamente
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    aki.notify('¡Consulta enviada exitosamente!', 'success');
+                    contactForm.reset();
+                    if (fileLabelText) {
+                        fileLabelText.textContent = 'Adjuntar fotos de receta (opcional)';
+                    }
+                } else {
+                    aki.notify(result.message || 'Error al enviar la consulta', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                aki.notify('Error al conectar con el servidor', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalHTML;
+            }
+        });
+    }
 }
 
 // Instancia global
@@ -225,5 +295,10 @@ const ui = new UIManager();
 
 // Inicializar detección offline
 ui.setupOfflineDetection();
+
+// Inicializar formulario de contacto
+document.addEventListener('DOMContentLoaded', () => {
+    ui.setupContactForm();
+});
 
 console.log('🎨 UI Manager cargado exitosamente');

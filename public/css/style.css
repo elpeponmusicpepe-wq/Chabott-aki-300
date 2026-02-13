@@ -814,6 +814,34 @@ body {
         gap: 10px;
     }
 
+    .file-upload-container {
+        margin: 5px 0;
+    }
+
+    .file-upload-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(59, 130, 246, 0.1);
+        border: 2px dashed var(--accent);
+        border-radius: 8px;
+        padding: 12px 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 13px;
+        color: var(--accent);
+    }
+
+    .file-upload-label:hover {
+        background: rgba(59, 130, 246, 0.2);
+        border-color: var(--accent-light);
+        transform: translateY(-2px);
+    }
+
+    .file-upload-label i {
+        font-size: 16px;
+    }
+
 @keyframes shimmer {
     0% { background-position: -1000px 0; }
     100% { background-position: 1000px 0; }
