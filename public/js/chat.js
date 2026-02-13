@@ -90,6 +90,48 @@ class ChatManager {
                     ]
                 }
             ],
+            documentationHelp: [
+                {
+                    keywords: ['ayuda con la documentacion para el usuario afiliado', 'documentacion afiliado', 'manual documentacion', 'documentacion para enviar por correo'],
+                    responses: [
+                        "# 📄 **Manual de Documentación para Usuario Afiliado**\n\nPara usar el botón **Contacto Doctor** y enviar por correo, te recomendamos preparar:\n\n1. **DNI** (frente y dorso)\n2. **Credencial de afiliado**\n3. **Orden médica** o derivación (si aplica)\n4. **Estudios previos** (análisis, informes, imágenes)\n5. **Receta o medicación actual**\n\n## ✅ Formato recomendado para enviar\n- Fotos claras y legibles\n- Preferible en **PDF/JPG/PNG**\n- Nombrar archivos: `apellido_documento_fecha`\n\n## 📩 Envío por correo desde Contacto Doctor\nEn el formulario, completa nombre, email, medicación/motivo y adjunta los archivos.\nMientras más completa la documentación, más rápida será la respuesta médica."
+                    ]
+                }
+            ],
+            doctorCategoriesDocs: [
+                {
+                    keywords: ['seleccionar categoria de doctores', 'categoria de doctores', 'categoria doctores', 'especialidades medicas'],
+                    responses: [
+                        "🩺 Selecciona una categoría de doctores para ver la documentación que debes llevar o enviar por correo desde Contacto Doctor:\n\n[DOCTOR_CATEGORIES]"
+                    ]
+                }
+            ],
+            doctorSpecialtyDocs: [
+                {
+                    keywords: ['documentacion de cirugia', 'documentos cirugia', 'categoria cirugia'],
+                    responses: [
+                        "📁 **Documentación para Cirugía**\n\n- DNI (frente y dorso)\n- Credencial de afiliado\n- Derivación/interconsulta a cirugía\n- Estudios prequirúrgicos recientes\n- Informe médico + medicación actual"
+                    ]
+                },
+                {
+                    keywords: ['documentacion de pediatria', 'documentos pediatria', 'categoria pediatria'],
+                    responses: [
+                        "📁 **Documentación para Pediatría**\n\n- DNI del tutor y del menor (si aplica)\n- Credencial de afiliado\n- Carnet de vacunación\n- Estudios e informes pediátricos previos\n- Orden de consulta o control"
+                    ]
+                },
+                {
+                    keywords: ['documentacion de kinesiologia', 'documentos kinesiologia', 'categoria kinesiologia'],
+                    responses: [
+                        "📁 **Documentación para Kinesiología**\n\n- DNI y credencial de afiliado\n- Orden médica de sesiones\n- Diagnóstico o informe traumatológico\n- Estudios de imagen (RX/RM) si existen\n- Resumen del dolor/limitación actual"
+                    ]
+                },
+                {
+                    keywords: ['documentacion de farmacia', 'documentos farmacia', 'categoria farmacia'],
+                    responses: [
+                        "📁 **Documentación para Farmacia**\n\n- DNI y credencial de afiliado\n- Receta médica vigente\n- Indicaciones de dosis y duración\n- Comprobante de cobertura (si aplica)\n- Estudios o antecedentes que respalden el tratamiento (si aplica)"
+                    ]
+                }
+            ],
             creativePoems: [
                 {
                     keywords: ['poema creativo', 'poesia', 'poema', 'versos', 'rima'],
@@ -132,6 +174,9 @@ class ChatManager {
             ...this.smartResponses.aboutAKI,
             ...this.smartResponses.healthFacts,
             ...this.smartResponses.programmingExamples,
+            ...this.smartResponses.documentationHelp,
+            ...this.smartResponses.doctorCategoriesDocs,
+            ...this.smartResponses.doctorSpecialtyDocs,
             ...this.smartResponses.creativePoems
         ];
         
@@ -195,6 +240,22 @@ class ChatManager {
     }
 
     async sendMessage(message) {
+        const normalizedMessage = String(message)
+            .toLowerCase()
+            .trim()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
+
+        if (normalizedMessage === 'juega con aki' || normalizedMessage.includes('ajedrez')) {
+            if (window.chessGame && typeof window.chessGame.open === 'function') {
+                window.chessGame.open();
+                aki.notify('Ajedrez contra AKI listo', 'success');
+            } else {
+                aki.notify('No se pudo abrir el ajedrez', 'error');
+            }
+            return;
+        }
+
         if (!aki.currentConversation) {
             await aki.createNewChat();
         }

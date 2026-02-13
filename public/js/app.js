@@ -201,30 +201,23 @@ class AKIPlatform {
                             <i class="fas fa-robot"></i>
                             <span>¿Cómo funcionas?</span>
                         </button>
-                        <button class="prompt-card" data-prompt="Cuéntame un dato interesante">
-                            <i class="fas fa-lightbulb"></i>
-                            <span>Dato interesante</span>
+                        <button class="prompt-card" data-prompt="Ayuda con la documentación para el usuario afiliado">
+                            <i class="fas fa-file-medical"></i>
+                            <span>Ayuda con documentación</span>
                         </button>
-                        <button class="prompt-card" data-prompt="Ayuda con programación">
-                            <i class="fas fa-code"></i>
-                            <span>Programación</span>
+                        <button class="prompt-card" data-prompt="Juega con AKI">
+                            <i class="fas fa-chess-knight"></i>
+                            <span>Juega con AKI</span>
                         </button>
-                        <button class="prompt-card" data-prompt="Escribe un poema creativo">
-                            <i class="fas fa-feather"></i>
-                            <span>Poema creativo</span>
+                        <button class="prompt-card" data-prompt="Seleccionar categoría de doctores">
+                            <i class="fas fa-user-doctor"></i>
+                            <span>Categoría de doctores</span>
                         </button>
                     </div>
                 </div>
             </div>
         `;
 
-        // Event listeners para prompts rápidos
-        messagesContainer.querySelectorAll('.prompt-card').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const prompt = btn.dataset.prompt;
-                chat.sendMessage(prompt);
-            });
-        });
     }
 
     renderMessages() {
@@ -241,7 +234,7 @@ class AKIPlatform {
                     ${msg.role === 'user' ? '👤' : '🤖'}
                 </div>
                 <div class="message-content">
-                    <div class="message-text">${this.escapeHtml(msg.content)}</div>
+                    <div class="message-text">${this.formatMessageContent(msg)}</div>
                     <div class="message-time">${new Date(msg.createdAt).toLocaleTimeString('es-ES', {
                         hour: '2-digit',
                         minute: '2-digit'
@@ -385,6 +378,37 @@ class AKIPlatform {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    formatMessageContent(message) {
+        const safeContent = this.escapeHtml(message.content || '').replace(/\n/g, '<br>');
+
+        if (message.role !== 'assistant') {
+            return safeContent;
+        }
+
+        const doctorCategoryButtons = `
+            <div class="doctor-category-grid">
+                <button class="prompt-card doctor-category-btn" data-prompt="Documentación de cirugía">
+                    <i class="fas fa-user-doctor"></i>
+                    <span>Cirugía</span>
+                </button>
+                <button class="prompt-card doctor-category-btn" data-prompt="Documentación de pediatría">
+                    <i class="fas fa-baby"></i>
+                    <span>Pediatría</span>
+                </button>
+                <button class="prompt-card doctor-category-btn" data-prompt="Documentación de kinesiología">
+                    <i class="fas fa-dumbbell"></i>
+                    <span>Kinesiología</span>
+                </button>
+                <button class="prompt-card doctor-category-btn" data-prompt="Documentación de farmacia">
+                    <i class="fas fa-pills"></i>
+                    <span>Farmacia</span>
+                </button>
+            </div>
+        `;
+
+        return safeContent.replace('[DOCTOR_CATEGORIES]', doctorCategoryButtons);
     }
 }
 

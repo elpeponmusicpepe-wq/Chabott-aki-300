@@ -311,7 +311,7 @@ class SettingsManager {
                     • <strong>Rojo:</strong> Para protanopia (dificultad con rojo)<br>
                     • <strong>Azul-Amarillo:</strong> Para tritanopia (dificultad con azul y amarillo)
                 </div>
-                
+
                 <div style="margin-top: 20px; padding: 15px; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
                     <strong>💡 Tip:</strong> Todas las configuraciones se guardan automáticamente y se mantienen cuando vuelvas a abrir AKI.
                 </div>

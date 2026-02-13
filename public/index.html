@@ -85,17 +85,17 @@
                                     <i class="fas fa-robot"></i>
                                     <span>¿Cómo funcionas?</span>
                                 </button>
-                                <button class="prompt-card" data-prompt="Cuéntame un dato interesante">
-                                    <i class="fas fa-lightbulb"></i>
-                                    <span>Dato interesante</span>
+                                <button class="prompt-card" data-prompt="Ayuda con la documentación para el usuario afiliado">
+                                    <i class="fas fa-file-medical"></i>
+                                    <span>Ayuda con documentación</span>
                                 </button>
-                                <button class="prompt-card" data-prompt="Ayuda con programación">
-                                    <i class="fas fa-code"></i>
-                                    <span>Programación</span>
+                                <button class="prompt-card" data-prompt="Juega con AKI">
+                                    <i class="fas fa-chess-knight"></i>
+                                    <span>Juega con AKI</span>
                                 </button>
-                                <button class="prompt-card" data-prompt="Escribe un poema creativo">
-                                    <i class="fas fa-feather"></i>
-                                    <span>Poema creativo</span>
+                                <button class="prompt-card" data-prompt="Seleccionar categoría de doctores">
+                                    <i class="fas fa-user-doctor"></i>
+                                    <span>Categoría de doctores</span>
                                 </button>
                             </div>
                         </div>
@@ -184,17 +184,17 @@
                     <i class="fas fa-robot"></i>
                     <span>¿Cómo funcionas?</span>
                 </button>
-                <button class="prompt-card" data-prompt="Cuéntame un dato interesante">
-                    <i class="fas fa-lightbulb"></i>
-                    <span>Dato interesante</span>
+                <button class="prompt-card" data-prompt="Ayuda con la documentación para el usuario afiliado">
+                    <i class="fas fa-file-medical"></i>
+                    <span>Ayuda con documentación</span>
                 </button>
-                <button class="prompt-card" data-prompt="Ayuda con programación">
-                    <i class="fas fa-code"></i>
-                    <span>Programación</span>
+                <button class="prompt-card" data-prompt="Juega con AKI">
+                    <i class="fas fa-chess-knight"></i>
+                    <span>Juega con AKI</span>
                 </button>
-                <button class="prompt-card" data-prompt="Escribe un poema creativo">
-                    <i class="fas fa-feather"></i>
-                    <span>Poema creativo</span>
+                <button class="prompt-card" data-prompt="Seleccionar categoría de doctores">
+                    <i class="fas fa-user-doctor"></i>
+                    <span>Categoría de doctores</span>
                 </button>
             </div>
         </div>
@@ -719,6 +719,31 @@
         </div>
     </div>
 
+    <!-- ================== MODAL DE AJEDREZ ================== -->
+    <div class="modal chess-modal" id="chess-modal">
+        <div class="modal-content chess-content">
+            <button class="modal-close" id="close-chess">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <div class="modal-header menu-header">
+                <i class="fas fa-chess-knight"></i>
+                <h2>Juega con AKI</h2>
+                <p>Ajedrez rápido contra AKI</p>
+            </div>
+
+            <div class="chess-status" id="chess-status">Tu turno (blancas)</div>
+            <div class="chess-board" id="chess-board"></div>
+
+            <div class="chess-actions">
+                <button class="settings-action-btn" id="restart-chess-btn">
+                    <i class="fas fa-rotate-right"></i>
+                    Reiniciar partida
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Notificaciones -->
     <div class="notifications-container" id="notificationsContainer"></div>
 
@@ -726,6 +751,7 @@
     <script src="js/app.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/chat.js"></script>
+    <script src="js/chess.js"></script>
     <script src="js/ui.js"></script>
         <script src="js/emergencies.js"></script>
         <script src="js/userProfile.js"></script>
