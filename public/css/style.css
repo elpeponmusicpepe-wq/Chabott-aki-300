@@ -1174,7 +1174,7 @@ body {
 
 .game-switcher {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 10px;
     margin-bottom: 14px;
 }
@@ -1318,6 +1318,26 @@ body {
 .hangman-key:disabled {
     opacity: 0.45;
     cursor: not-allowed;
+}
+
+.pacman-score {
+    text-align: center;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+}
+
+#pacman-canvas {
+    display: block;
+    width: 100%;
+    max-width: 620px;
+    margin: 0 auto;
+    border: 2px solid #1d4ed8;
+    border-radius: 14px;
+    background: radial-gradient(circle at 50% 50%, #0b1230 0%, #060b1d 100%);
+    box-shadow: 0 0 0 1px rgba(125, 211, 252, 0.2), 0 14px 40px rgba(0, 0, 0, 0.45), inset 0 0 20px rgba(29, 78, 216, 0.2);
+    image-rendering: pixelated;
 }
 
 /* ==================== BARRA DE ACCIONES ==================== */

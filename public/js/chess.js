@@ -7,8 +7,10 @@ class ChessGame {
         this.restartBtn = document.getElementById('restart-chess-btn');
         this.gameTabChess = document.getElementById('game-tab-chess');
         this.gameTabHangman = document.getElementById('game-tab-hangman');
+        this.gameTabPacman = document.getElementById('game-tab-pacman');
         this.chessPanel = document.getElementById('chess-game-panel');
         this.hangmanPanel = document.getElementById('hangman-game-panel');
+        this.pacmanPanel = document.getElementById('pacman-game-panel');
 
         this.hangmanStatusElement = document.getElementById('hangman-status');
         this.hangmanWordElement = document.getElementById('hangman-word');
@@ -17,6 +19,12 @@ class ChessGame {
         this.hangmanLivesElement = document.getElementById('hangman-lives');
         this.hangmanKeyboardElement = document.getElementById('hangman-keyboard');
         this.restartHangmanBtn = document.getElementById('restart-hangman-btn');
+
+        this.pacmanCanvas = document.getElementById('pacman-canvas');
+        this.pacmanCtx = this.pacmanCanvas ? this.pacmanCanvas.getContext('2d') : null;
+        this.pacmanStatusElement = document.getElementById('pacman-status');
+        this.pacmanScoreElement = document.getElementById('pacman-score');
+        this.restartPacmanBtn = document.getElementById('restart-pacman-btn');
 
         this.pieceSymbols = {
             w: { king: '♔', queen: '♕', rook: '♖', bishop: '♗', knight: '♘', pawn: '♙' },
@@ -58,9 +66,34 @@ class ChessGame {
         this.hangmanLives = 6;
         this.hangmanOver = false;
 
+        this.pacmanMapTemplate = [
+            '#####################',
+            '#P.......#.......G..#',
+            '#.###.##.#.##.###...#',
+            '#.....##...##.......#',
+            '#.###.#####.###.###.#',
+            '#.....#...#.....#...#',
+            '#.###.#.#.#.###.#.#.#',
+            '#...#...#...#...#...#',
+            '#.#.#####.#####.#.#.#',
+            '#...................#',
+            '#####################'
+        ];
+        this.pacmanMap = [];
+        this.pacmanPellets = 0;
+        this.pacmanPlayer = { x: 1, y: 1, dir: { x: 0, y: 0 }, nextDir: { x: 0, y: 0 } };
+        this.pacmanGhost = { x: 18, y: 1, dir: { x: -1, y: 0 } };
+        this.pacmanScore = 0;
+        this.pacmanOver = false;
+        this.pacmanLoop = null;
+        this.pacmanCell = 20;
+        this.pacmanTick = 0;
+        this.pacmanKeyHandler = (event) => this.handlePacmanKeydown(event);
+
         this.setupListeners();
         this.resetGame();
         this.startHangman();
+        this.initPacman(true);
     }
 
     setupListeners() {
@@ -69,8 +102,10 @@ class ChessGame {
         this.closeBtn?.addEventListener('click', () => this.close());
         this.restartBtn?.addEventListener('click', () => this.resetGame());
         this.restartHangmanBtn?.addEventListener('click', () => this.startHangman());
+        this.restartPacmanBtn?.addEventListener('click', () => this.initPacman(true));
         this.gameTabChess?.addEventListener('click', () => this.switchGame('chess'));
         this.gameTabHangman?.addEventListener('click', () => this.switchGame('hangman'));
+        this.gameTabPacman?.addEventListener('click', () => this.switchGame('pacman'));
 
         this.modal.addEventListener('click', (event) => {
             if (event.target === this.modal) {
@@ -86,6 +121,8 @@ class ChessGame {
             const col = Number(square.dataset.col);
             this.onSquareClick(row, col);
         });
+
+        document.addEventListener('keydown', this.pacmanKeyHandler);
     }
 
     open() {
@@ -96,16 +133,27 @@ class ChessGame {
 
     close() {
         if (!this.modal) return;
+        this.stopPacmanLoop();
         this.modal.classList.remove('open');
     }
 
     switchGame(game) {
         const showChess = game === 'chess';
+        const showHangman = game === 'hangman';
+        const showPacman = game === 'pacman';
 
         this.gameTabChess?.classList.toggle('active', showChess);
-        this.gameTabHangman?.classList.toggle('active', !showChess);
+        this.gameTabHangman?.classList.toggle('active', showHangman);
+        this.gameTabPacman?.classList.toggle('active', showPacman);
         this.chessPanel?.classList.toggle('active', showChess);
-        this.hangmanPanel?.classList.toggle('active', !showChess);
+        this.hangmanPanel?.classList.toggle('active', showHangman);
+        this.pacmanPanel?.classList.toggle('active', showPacman);
+
+        if (showPacman) {
+            this.startPacmanLoop();
+        } else {
+            this.stopPacmanLoop();
+        }
     }
 
     resetGame() {
@@ -432,6 +480,267 @@ class ChessGame {
         }
 
         this.renderHangman();
+    }
+
+    initPacman(resetScore = false) {
+        this.pacmanMap = this.pacmanMapTemplate.map((row) => row.split(''));
+        this.pacmanPellets = 0;
+
+        if (this.pacmanCanvas) {
+            const cols = this.pacmanMapTemplate[0].length;
+            const rows = this.pacmanMapTemplate.length;
+            this.pacmanCanvas.width = cols * this.pacmanCell;
+            this.pacmanCanvas.height = rows * this.pacmanCell;
+        }
+
+        for (let y = 0; y < this.pacmanMap.length; y++) {
+            for (let x = 0; x < this.pacmanMap[y].length; x++) {
+                const cell = this.pacmanMap[y][x];
+                if (cell === '.') this.pacmanPellets += 1;
+                if (cell === 'P') {
+                    this.pacmanPlayer = { x, y, dir: { x: 0, y: 0 }, nextDir: { x: 0, y: 0 } };
+                    this.pacmanMap[y][x] = ' ';
+                }
+                if (cell === 'G') {
+                    this.pacmanGhost = { x, y, dir: { x: -1, y: 0 } };
+                    this.pacmanMap[y][x] = ' ';
+                }
+            }
+        }
+
+        if (resetScore) {
+            this.pacmanScore = 0;
+        }
+
+        this.pacmanOver = false;
+        this.setPacmanStatus('Usa flechas para mover a AKI-Pacman');
+        this.renderPacman();
+    }
+
+    setPacmanStatus(text) {
+        if (this.pacmanStatusElement) {
+            this.pacmanStatusElement.textContent = text;
+        }
+    }
+
+    startPacmanLoop() {
+        if (!this.pacmanCanvas) return;
+        if (this.pacmanLoop) return;
+
+        this.pacmanLoop = setInterval(() => {
+            this.tickPacman();
+        }, 120);
+    }
+
+    stopPacmanLoop() {
+        if (this.pacmanLoop) {
+            clearInterval(this.pacmanLoop);
+            this.pacmanLoop = null;
+        }
+    }
+
+    handlePacmanKeydown(event) {
+        if (!this.modal?.classList.contains('open')) return;
+        if (!this.pacmanPanel?.classList.contains('active')) return;
+
+        const keyMap = {
+            ArrowUp: { x: 0, y: -1 },
+            ArrowDown: { x: 0, y: 1 },
+            ArrowLeft: { x: -1, y: 0 },
+            ArrowRight: { x: 1, y: 0 }
+        };
+
+        const dir = keyMap[event.key];
+        if (!dir) return;
+
+        event.preventDefault();
+        this.pacmanPlayer.nextDir = dir;
+    }
+
+    tickPacman() {
+        if (this.pacmanOver) return;
+
+        this.pacmanTick += 1;
+
+        this.movePacmanPlayer();
+        this.movePacmanGhost();
+        this.checkPacmanCollision();
+        this.renderPacman();
+    }
+
+    movePacmanPlayer() {
+        const next = this.pacmanPlayer.nextDir;
+        if (next && !this.isPacmanWall(this.pacmanPlayer.x + next.x, this.pacmanPlayer.y + next.y)) {
+            this.pacmanPlayer.dir = next;
+        }
+
+        const dir = this.pacmanPlayer.dir;
+        if (!dir) return;
+
+        const targetX = this.pacmanPlayer.x + dir.x;
+        const targetY = this.pacmanPlayer.y + dir.y;
+        if (this.isPacmanWall(targetX, targetY)) return;
+
+        this.pacmanPlayer.x = targetX;
+        this.pacmanPlayer.y = targetY;
+
+        if (this.pacmanMap[targetY][targetX] === '.') {
+            this.pacmanMap[targetY][targetX] = ' ';
+            this.pacmanScore += 10;
+            this.pacmanPellets -= 1;
+
+            if (this.pacmanPellets <= 0) {
+                this.pacmanOver = true;
+                this.setPacmanStatus('¡Ganaste! Limpiaste todo el tablero 👑');
+                this.stopPacmanLoop();
+            }
+        }
+    }
+
+    movePacmanGhost() {
+        const options = [
+            { x: 0, y: -1 },
+            { x: 0, y: 1 },
+            { x: -1, y: 0 },
+            { x: 1, y: 0 }
+        ].filter((dir) => !this.isPacmanWall(this.pacmanGhost.x + dir.x, this.pacmanGhost.y + dir.y));
+
+        if (options.length === 0) return;
+
+        let selected = options[Math.floor(Math.random() * options.length)];
+        const towardPlayer = options.sort((a, b) => {
+            const da = Math.abs((this.pacmanGhost.x + a.x) - this.pacmanPlayer.x) + Math.abs((this.pacmanGhost.y + a.y) - this.pacmanPlayer.y);
+            const db = Math.abs((this.pacmanGhost.x + b.x) - this.pacmanPlayer.x) + Math.abs((this.pacmanGhost.y + b.y) - this.pacmanPlayer.y);
+            return da - db;
+        });
+
+        if (Math.random() < 0.65) {
+            selected = towardPlayer[0];
+        }
+
+        this.pacmanGhost.x += selected.x;
+        this.pacmanGhost.y += selected.y;
+        this.pacmanGhost.dir = selected;
+    }
+
+    checkPacmanCollision() {
+        if (this.pacmanPlayer.x === this.pacmanGhost.x && this.pacmanPlayer.y === this.pacmanGhost.y) {
+            this.pacmanOver = true;
+            this.setPacmanStatus('AKI fantasma te atrapó 👻');
+            this.stopPacmanLoop();
+        }
+    }
+
+    isPacmanWall(x, y) {
+        if (y < 0 || y >= this.pacmanMap.length || x < 0 || x >= this.pacmanMap[0].length) {
+            return true;
+        }
+        return this.pacmanMap[y][x] === '#';
+    }
+
+    renderPacman() {
+        if (!this.pacmanCtx || !this.pacmanCanvas) return;
+
+        const rows = this.pacmanMap.length;
+        const cols = this.pacmanMap[0].length;
+        const cellW = this.pacmanCanvas.width / cols;
+        const cellH = this.pacmanCanvas.height / rows;
+        const cell = Math.min(cellW, cellH);
+
+        this.pacmanCtx.clearRect(0, 0, this.pacmanCanvas.width, this.pacmanCanvas.height);
+
+        const bgGradient = this.pacmanCtx.createLinearGradient(0, 0, this.pacmanCanvas.width, this.pacmanCanvas.height);
+        bgGradient.addColorStop(0, '#0b1230');
+        bgGradient.addColorStop(1, '#070d22');
+        this.pacmanCtx.fillStyle = bgGradient;
+        this.pacmanCtx.fillRect(0, 0, this.pacmanCanvas.width, this.pacmanCanvas.height);
+
+        for (let y = 0; y < rows; y++) {
+            for (let x = 0; x < cols; x++) {
+                const cell = this.pacmanMap[y][x];
+                const px = x * cellW;
+                const py = y * cellH;
+
+                if (cell === '#') {
+                    this.pacmanCtx.fillStyle = '#1d4ed8';
+                    this.pacmanCtx.strokeStyle = '#67e8f9';
+                    this.pacmanCtx.lineWidth = 1.2;
+                    this.pacmanCtx.beginPath();
+                    this.pacmanCtx.roundRect(px + 1, py + 1, cellW - 2, cellH - 2, 4);
+                    this.pacmanCtx.fill();
+                    this.pacmanCtx.stroke();
+                }
+
+                if (cell === '.') {
+                    this.pacmanCtx.fillStyle = '#fde68a';
+                    this.pacmanCtx.shadowColor = '#fde68a';
+                    this.pacmanCtx.shadowBlur = 8;
+                    this.pacmanCtx.beginPath();
+                    this.pacmanCtx.arc(px + cellW / 2, py + cellH / 2, Math.min(cellW, cellH) * 0.14, 0, Math.PI * 2);
+                    this.pacmanCtx.fill();
+                    this.pacmanCtx.shadowBlur = 0;
+                }
+            }
+        }
+
+        const playerCenterX = this.pacmanPlayer.x * cellW + cellW / 2;
+        const playerCenterY = this.pacmanPlayer.y * cellH + cellH / 2;
+        const playerRadius = cell * 0.38;
+        const mouthOpen = 0.16 + Math.abs(Math.sin(this.pacmanTick * 0.45)) * 0.42;
+        const playerDir = this.pacmanPlayer.dir || { x: 1, y: 0 };
+        const dirAngle = this.getDirectionAngle(playerDir);
+
+        this.pacmanCtx.fillStyle = '#facc15';
+        this.pacmanCtx.shadowColor = '#facc15';
+        this.pacmanCtx.shadowBlur = 14;
+        this.pacmanCtx.beginPath();
+        this.pacmanCtx.arc(playerCenterX, playerCenterY, playerRadius, dirAngle + mouthOpen, dirAngle + (Math.PI * 2) - mouthOpen);
+        this.pacmanCtx.lineTo(playerCenterX, playerCenterY);
+        this.pacmanCtx.fill();
+        this.pacmanCtx.shadowBlur = 0;
+
+        const ghostX = this.pacmanGhost.x * cellW + cellW / 2;
+        const ghostY = this.pacmanGhost.y * cellH + cellH / 2;
+        const ghostR = cell * 0.34;
+
+        this.pacmanCtx.fillStyle = '#f43f5e';
+        this.pacmanCtx.shadowColor = '#f43f5e';
+        this.pacmanCtx.shadowBlur = 12;
+        this.pacmanCtx.beginPath();
+        this.pacmanCtx.arc(ghostX, ghostY - ghostR * 0.05, ghostR, Math.PI, 0);
+        this.pacmanCtx.lineTo(ghostX + ghostR, ghostY + ghostR);
+        this.pacmanCtx.lineTo(ghostX + ghostR * 0.5, ghostY + ghostR * 0.68);
+        this.pacmanCtx.lineTo(ghostX, ghostY + ghostR);
+        this.pacmanCtx.lineTo(ghostX - ghostR * 0.5, ghostY + ghostR * 0.68);
+        this.pacmanCtx.lineTo(ghostX - ghostR, ghostY + ghostR);
+        this.pacmanCtx.closePath();
+        this.pacmanCtx.fill();
+        this.pacmanCtx.shadowBlur = 0;
+
+        this.pacmanCtx.fillStyle = '#ffffff';
+        this.pacmanCtx.beginPath();
+        this.pacmanCtx.arc(ghostX - ghostR * 0.35, ghostY - ghostR * 0.15, ghostR * 0.22, 0, Math.PI * 2);
+        this.pacmanCtx.arc(ghostX + ghostR * 0.35, ghostY - ghostR * 0.15, ghostR * 0.22, 0, Math.PI * 2);
+        this.pacmanCtx.fill();
+
+        this.pacmanCtx.fillStyle = '#0f172a';
+        this.pacmanCtx.beginPath();
+        this.pacmanCtx.arc(ghostX - ghostR * 0.3, ghostY - ghostR * 0.15, ghostR * 0.1, 0, Math.PI * 2);
+        this.pacmanCtx.arc(ghostX + ghostR * 0.4, ghostY - ghostR * 0.15, ghostR * 0.1, 0, Math.PI * 2);
+        this.pacmanCtx.fill();
+
+        if (this.pacmanScoreElement) {
+            this.pacmanScoreElement.textContent = `Puntaje: ${this.pacmanScore} · Puntos restantes: ${this.pacmanPellets}`;
+        }
+    }
+
+    getDirectionAngle(direction) {
+        if (!direction) return 0;
+        if (direction.x === 1) return 0;
+        if (direction.x === -1) return Math.PI;
+        if (direction.y === -1) return -Math.PI / 2;
+        if (direction.y === 1) return Math.PI / 2;
+        return 0;
     }
 }
 
