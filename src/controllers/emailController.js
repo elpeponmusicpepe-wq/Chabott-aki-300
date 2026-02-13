@@ -2,6 +2,26 @@ const nodemailer = require('nodemailer');
 const multer = require('multer');
 const path = require('path');
 
+function isMailtrapAddress(value = '') {
+    const normalized = String(value).toLowerCase();
+    return normalized.includes('mailtrap') || normalized.includes('sandbox.smtp');
+}
+
+function resolveContactEmail() {
+    const envContactEmail = process.env.CONTACT_EMAIL;
+    const gmailUser = process.env.GMAIL_USER;
+
+    if (envContactEmail && !isMailtrapAddress(envContactEmail)) {
+        return envContactEmail;
+    }
+
+    if (envContactEmail && isMailtrapAddress(envContactEmail)) {
+        console.warn('⚠️ CONTACT_EMAIL apunta a Mailtrap. Se usará GMAIL_USER como destino.');
+    }
+
+    return gmailUser;
+}
+
 // Configurar multer para archivos en memoria
 const storage = multer.memoryStorage();
 const upload = multer({
@@ -42,6 +62,13 @@ exports.sendContactEmail = async (req, res) => {
         try {
             const { nombre, email, medicacion, mensaje } = req.body;
 
+            if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+                return res.status(500).json({
+                    success: false,
+                    message: 'Falta configurar GMAIL_USER o GMAIL_APP_PASSWORD en el servidor'
+                });
+            }
+
             // Validar campos
             if (!nombre || !email || !medicacion || !mensaje) {
                 return res.status(400).json({
@@ -50,7 +77,14 @@ exports.sendContactEmail = async (req, res) => {
                 });
             }
 
-            const CONTACT_EMAIL = process.env.CONTACT_EMAIL || process.env.GMAIL_USER;
+            const CONTACT_EMAIL = resolveContactEmail();
+
+            if (!CONTACT_EMAIL) {
+                return res.status(500).json({
+                    success: false,
+                    message: 'No hay un email de destino configurado en el servidor'
+                });
+            }
             
             // Preparar adjuntos si hay archivos
             const attachments = [];

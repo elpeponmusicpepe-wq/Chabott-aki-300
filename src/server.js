@@ -3,6 +3,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const path = require('path');
+const { initializeDatabase } = require('./config/database');
 
 dotenv.config();
 
@@ -35,14 +36,26 @@ app.use((err, req, res, next) => {
 
 // Iniciar servidor
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`
+
+async function startServer() {
+    try {
+        await initializeDatabase();
+
+        app.listen(PORT, () => {
+            console.log(`
     ╔════════════════════════════════════════╗
     ║   🚀 AKI CHATBOT DEFINITIVO 🚀        ║
     ║   Servidor corriendo en puerto ${PORT}  ║
     ║   http://localhost:${PORT}              ║
     ╚════════════════════════════════════════╝
     `);
-});
+        });
+    } catch (error) {
+        console.error('❌ No se pudo iniciar el servidor:', error);
+        process.exit(1);
+    }
+}
+
+startServer();
 
 module.exports = app;
