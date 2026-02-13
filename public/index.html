@@ -741,6 +741,10 @@
                     <i class="fas fa-notes-medical"></i>
                     Ahorcado médico
                 </button>
+                <button class="game-tab" id="game-tab-pacman">
+                    <i class="fas fa-ghost"></i>
+                    Mini Pacman
+                </button>
             </div>
 
             <div class="game-panel active" id="chess-game-panel">
@@ -768,6 +772,18 @@
                     <button class="settings-action-btn" id="restart-hangman-btn">
                         <i class="fas fa-rotate-right"></i>
                         Nueva palabra
+                    </button>
+                </div>
+            </div>
+
+            <div class="game-panel" id="pacman-game-panel">
+                <div class="chess-status" id="pacman-status">Usa flechas para mover a AKI-Pacman</div>
+                <div class="pacman-score" id="pacman-score">Puntaje: 0</div>
+                <canvas id="pacman-canvas" width="420" height="300" aria-label="Mini Pacman"></canvas>
+                <div class="chess-actions">
+                    <button class="settings-action-btn" id="restart-pacman-btn">
+                        <i class="fas fa-rotate-right"></i>
+                        Reiniciar Pacman
                     </button>
                 </div>
             </div>
