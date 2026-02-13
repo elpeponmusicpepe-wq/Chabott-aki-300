@@ -5,6 +5,18 @@ class ChessGame {
         this.statusElement = document.getElementById('chess-status');
         this.closeBtn = document.getElementById('close-chess');
         this.restartBtn = document.getElementById('restart-chess-btn');
+        this.gameTabChess = document.getElementById('game-tab-chess');
+        this.gameTabHangman = document.getElementById('game-tab-hangman');
+        this.chessPanel = document.getElementById('chess-game-panel');
+        this.hangmanPanel = document.getElementById('hangman-game-panel');
+
+        this.hangmanStatusElement = document.getElementById('hangman-status');
+        this.hangmanWordElement = document.getElementById('hangman-word');
+        this.hangmanHintElement = document.getElementById('hangman-hint');
+        this.hangmanWrongElement = document.getElementById('hangman-wrong');
+        this.hangmanLivesElement = document.getElementById('hangman-lives');
+        this.hangmanKeyboardElement = document.getElementById('hangman-keyboard');
+        this.restartHangmanBtn = document.getElementById('restart-hangman-btn');
 
         this.pieceSymbols = {
             w: { king: '♔', queen: '♕', rook: '♖', bishop: '♗', knight: '♘', pawn: '♙' },
@@ -26,8 +38,29 @@ class ChessGame {
         this.gameOver = false;
         this.board = [];
 
+        this.medicalWords = [
+            { word: 'FARMACIA', hint: 'Lugar donde se dispensan medicamentos' },
+            { word: 'PEDIATRIA', hint: 'Especialidad médica infantil' },
+            { word: 'KINESIOLOGIA', hint: 'Terapia física y rehabilitación' },
+            { word: 'CIRUGIA', hint: 'Especialidad de intervenciones quirúrgicas' },
+            { word: 'RECETA', hint: 'Documento para indicar medicamentos' },
+            { word: 'DIAGNOSTICO', hint: 'Conclusión médica sobre una enfermedad' },
+            { word: 'INSULINA', hint: 'Hormona usada en tratamiento de diabetes' },
+            { word: 'VACUNA', hint: 'Prevención inmunológica de enfermedades' },
+            { word: 'ANALISIS', hint: 'Estudio de laboratorio clínico' },
+            { word: 'CONSULTA', hint: 'Atención médica con profesional de salud' }
+        ];
+
+        this.hangmanWord = '';
+        this.hangmanHint = '';
+        this.hangmanGuessed = new Set();
+        this.hangmanWrong = [];
+        this.hangmanLives = 6;
+        this.hangmanOver = false;
+
         this.setupListeners();
         this.resetGame();
+        this.startHangman();
     }
 
     setupListeners() {
@@ -35,6 +68,9 @@ class ChessGame {
 
         this.closeBtn?.addEventListener('click', () => this.close());
         this.restartBtn?.addEventListener('click', () => this.resetGame());
+        this.restartHangmanBtn?.addEventListener('click', () => this.startHangman());
+        this.gameTabChess?.addEventListener('click', () => this.switchGame('chess'));
+        this.gameTabHangman?.addEventListener('click', () => this.switchGame('hangman'));
 
         this.modal.addEventListener('click', (event) => {
             if (event.target === this.modal) {
@@ -54,12 +90,22 @@ class ChessGame {
 
     open() {
         if (!this.modal) return;
+        this.switchGame('chess');
         this.modal.classList.add('open');
     }
 
     close() {
         if (!this.modal) return;
         this.modal.classList.remove('open');
+    }
+
+    switchGame(game) {
+        const showChess = game === 'chess';
+
+        this.gameTabChess?.classList.toggle('active', showChess);
+        this.gameTabHangman?.classList.toggle('active', !showChess);
+        this.chessPanel?.classList.toggle('active', showChess);
+        this.hangmanPanel?.classList.toggle('active', !showChess);
     }
 
     resetGame() {
@@ -312,6 +358,80 @@ class ChessGame {
 
     inBounds(row, col) {
         return row >= 0 && row < 8 && col >= 0 && col < 8;
+    }
+
+    startHangman() {
+        const selected = this.medicalWords[Math.floor(Math.random() * this.medicalWords.length)];
+        this.hangmanWord = selected.word;
+        this.hangmanHint = selected.hint;
+        this.hangmanGuessed = new Set();
+        this.hangmanWrong = [];
+        this.hangmanLives = 6;
+        this.hangmanOver = false;
+
+        this.renderHangman();
+    }
+
+    renderHangman() {
+        if (!this.hangmanWordElement) return;
+
+        const masked = this.hangmanWord
+            .split('')
+            .map((char) => (this.hangmanGuessed.has(char) ? char : '_'))
+            .join(' ');
+
+        this.hangmanWordElement.textContent = masked;
+        this.hangmanHintElement.textContent = `Pista: ${this.hangmanHint}`;
+        this.hangmanWrongElement.textContent = `Letras incorrectas: ${this.hangmanWrong.join(', ') || '-'}`;
+        this.hangmanLivesElement.textContent = `Intentos restantes: ${this.hangmanLives}`;
+
+        if (this.hangmanOver) {
+            this.hangmanStatusElement.textContent = this.hangmanLives > 0
+                ? '¡Ganaste! Excelente diagnóstico médico 🩺'
+                : `Perdiste. La palabra era: ${this.hangmanWord}`;
+        } else {
+            this.hangmanStatusElement.textContent = 'Adivina la palabra médica de AKI';
+        }
+
+        this.renderHangmanKeyboard();
+    }
+
+    renderHangmanKeyboard() {
+        if (!this.hangmanKeyboardElement) return;
+
+        const letters = 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'.split('');
+
+        this.hangmanKeyboardElement.innerHTML = letters
+            .map((letter) => {
+                const used = this.hangmanGuessed.has(letter) || this.hangmanWrong.includes(letter) || this.hangmanOver;
+                return `<button class="hangman-key" data-letter="${letter}" ${used ? 'disabled' : ''}>${letter}</button>`;
+            })
+            .join('');
+
+        this.hangmanKeyboardElement.querySelectorAll('.hangman-key').forEach((key) => {
+            key.addEventListener('click', () => this.guessHangmanLetter(key.dataset.letter));
+        });
+    }
+
+    guessHangmanLetter(letter) {
+        if (this.hangmanOver) return;
+
+        if (this.hangmanWord.includes(letter)) {
+            this.hangmanGuessed.add(letter);
+        } else if (!this.hangmanWrong.includes(letter)) {
+            this.hangmanWrong.push(letter);
+            this.hangmanLives -= 1;
+        }
+
+        const allGuessed = this.hangmanWord
+            .split('')
+            .every((char) => this.hangmanGuessed.has(char));
+
+        if (allGuessed || this.hangmanLives <= 0) {
+            this.hangmanOver = true;
+        }
+
+        this.renderHangman();
     }
 }
 

@@ -729,17 +729,47 @@
             <div class="modal-header menu-header">
                 <i class="fas fa-chess-knight"></i>
                 <h2>Juega con AKI</h2>
-                <p>Ajedrez rápido contra AKI</p>
+                <p>Elige un juego y diviértete con AKI</p>
             </div>
 
-            <div class="chess-status" id="chess-status">Tu turno (blancas)</div>
-            <div class="chess-board" id="chess-board"></div>
-
-            <div class="chess-actions">
-                <button class="settings-action-btn" id="restart-chess-btn">
-                    <i class="fas fa-rotate-right"></i>
-                    Reiniciar partida
+            <div class="game-switcher">
+                <button class="game-tab active" id="game-tab-chess">
+                    <i class="fas fa-chess-board"></i>
+                    Ajedrez
                 </button>
+                <button class="game-tab" id="game-tab-hangman">
+                    <i class="fas fa-notes-medical"></i>
+                    Ahorcado médico
+                </button>
+            </div>
+
+            <div class="game-panel active" id="chess-game-panel">
+                <div class="chess-status" id="chess-status">Tu turno (blancas)</div>
+                <div class="chess-board" id="chess-board"></div>
+
+                <div class="chess-actions">
+                    <button class="settings-action-btn" id="restart-chess-btn">
+                        <i class="fas fa-rotate-right"></i>
+                        Reiniciar partida
+                    </button>
+                </div>
+            </div>
+
+            <div class="game-panel" id="hangman-game-panel">
+                <div class="chess-status" id="hangman-status">AKI está pensando una palabra médica...</div>
+                <div class="hangman-word" id="hangman-word"></div>
+                <div class="hangman-meta">
+                    <div class="hangman-hint" id="hangman-hint"></div>
+                    <div class="hangman-wrong" id="hangman-wrong"></div>
+                    <div class="hangman-lives" id="hangman-lives"></div>
+                </div>
+                <div class="hangman-keyboard" id="hangman-keyboard"></div>
+                <div class="chess-actions">
+                    <button class="settings-action-btn" id="restart-hangman-btn">
+                        <i class="fas fa-rotate-right"></i>
+                        Nueva palabra
+                    </button>
+                </div>
             </div>
         </div>
     </div>
