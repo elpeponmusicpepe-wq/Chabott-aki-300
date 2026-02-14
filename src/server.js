@@ -8,12 +8,13 @@ const { initializeDatabase } = require('./config/database');
 dotenv.config();
 
 const app = express();
+const publicPath = path.join(__dirname, '../public');
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
-app.use(express.static('public'));
+app.use(express.static(publicPath));
 
 // Rutas API
 app.use('/api/auth', require('./routes/authRoutes'));
@@ -23,7 +24,18 @@ app.use('/api/email', require('./routes/emailRoutes'));
 
 // Ruta principal
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../public/index.html'));
+    res.sendFile(path.join(publicPath, 'index.html'));
+});
+
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok' });
+});
+
+app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api/')) {
+        return next();
+    }
+    return res.sendFile(path.join(publicPath, 'index.html'));
 });
 
 // Error handling
