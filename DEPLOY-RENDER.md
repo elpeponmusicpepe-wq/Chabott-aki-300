@@ -126,7 +126,15 @@ DB_PORT = 5432
 DB_NAME = aki_chatbot
 
 JWT_SECRET = aki_super_secret_key_2026_cambiar_en_produccion
+
+GMAIL_USER = tu_cuenta@gmail.com
+
+GMAIL_APP_PASSWORD = tu_password_de_aplicacion_gmail
+
+CONTACT_EMAIL = tu_cuenta@gmail.com
 ```
+
+⚠️ Si faltan `GMAIL_USER` o `GMAIL_APP_PASSWORD`, el formulario "Contacto Doctor" no podrá enviar correos en producción.
 
 ### 🔍 CÓMO OBTENER LOS DATOS DE LA DATABASE URL:
 
@@ -199,6 +207,15 @@ https://aki-chatbot.onrender.com
 - Ve a "Logs" y busca errores en rojo
 - Verifica que las tablas estén creadas en PostgreSQL
 - Comprueba que JWT_SECRET esté configurado
+
+### Contacto Doctor no envía en Render
+**Solución:**
+- Verifica en Environment que existan `GMAIL_USER`, `GMAIL_APP_PASSWORD` y `CONTACT_EMAIL`
+- Haz un Manual Deploy luego de guardar variables
+- Prueba este endpoint para diagnóstico:
+    - `https://TU-APP.onrender.com/api/email/status`
+    - Verificación SMTP completa: `https://TU-APP.onrender.com/api/email/status?verify=1`
+- Si `verify.ok` da `false`, revisa contraseña de aplicación de Google (no la contraseña normal)
 
 ### El servicio se "duerme":
 **Normal en plan Free:**

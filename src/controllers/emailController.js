@@ -60,6 +60,40 @@ const transporter = nodemailer.createTransport({
     }
 });
 
+exports.getEmailStatus = async (req, res) => {
+    const hasGmailUser = Boolean(process.env.GMAIL_USER);
+    const hasGmailPassword = Boolean(process.env.GMAIL_APP_PASSWORD);
+    const contactEmail = resolveContactEmail();
+
+    const responsePayload = {
+        success: true,
+        config: {
+            smtpProvider: 'gmail',
+            hasGmailUser,
+            hasGmailPassword,
+            hasContactEmail: Boolean(contactEmail),
+            destinationDomain: contactEmail ? String(contactEmail).split('@')[1] || null : null
+        }
+    };
+
+    if (req.query.verify === '1') {
+        try {
+            await transporter.verify();
+            responsePayload.verify = {
+                ok: true,
+                message: 'SMTP disponible'
+            };
+        } catch (error) {
+            responsePayload.verify = {
+                ok: false,
+                message: error?.message || 'No se pudo verificar SMTP'
+            };
+        }
+    }
+
+    return res.status(200).json(responsePayload);
+};
+
 function sendMailWithTimeout(mailOptions, timeoutMs = 15000) {
     return Promise.race([
         transporter.sendMail(mailOptions),
@@ -199,7 +233,7 @@ exports.sendContactEmail = async (req, res) => {
             return res.status(500).json({
                 success: false,
                 message: 'Hubo un error al enviar tu consulta. Intenta de nuevo.',
-                error: process.env.NODE_ENV === 'development' ? error.message : undefined
+                error: error?.message || 'Error SMTP desconocido'
             });
         }
     });
