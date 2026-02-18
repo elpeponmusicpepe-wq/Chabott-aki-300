@@ -3,14 +3,18 @@ const bcrypt = require('bcryptjs');
 
 class User {
     // Crear un nuevo usuario
-    static async create({ email, password, name, dni, edad, afiliado }) {
+    static async create({ email, password, name, dni = null, edad = null, afiliado = null, contacto = null }) {
         try {
             const hashedPassword = await bcrypt.hash(password, 10);
+            const safeDni = dni ?? null;
+            const safeEdad = edad ?? null;
+            const safeAfiliado = afiliado ?? null;
+            const safeContacto = contacto ?? null;
             
             const [user] = await sql`
-                INSERT INTO users (email, password, name, dni, edad, afiliado)
-                VALUES (${email}, ${hashedPassword}, ${name}, ${dni}, ${edad}, ${afiliado})
-                RETURNING id, email, name, dni, edad, afiliado, created_at
+                INSERT INTO users (email, password, name, dni, edad, afiliado, contacto)
+                VALUES (${email}, ${hashedPassword}, ${name}, ${safeDni}, ${safeEdad}, ${safeAfiliado}, ${safeContacto})
+                RETURNING id, email, name, dni, edad, afiliado, contacto, created_at
             `;
             
             return user;
@@ -35,7 +39,7 @@ class User {
     static async findById(id) {
         try {
             const [user] = await sql`
-                SELECT id, email, name, dni, edad, afiliado, created_at 
+                SELECT id, email, name, dni, edad, afiliado, contacto, created_at 
                 FROM users WHERE id = ${id}
             `;
             return user;
@@ -52,16 +56,79 @@ class User {
     // Actualizar perfil
     static async update(id, data) {
         try {
-            const { name, dni, edad, afiliado } = data;
+            const { name, dni, edad, afiliado, contacto } = data;
+            const safeName = name ?? null;
+            const safeDni = dni ?? null;
+            const safeEdad = edad ?? null;
+            const safeAfiliado = afiliado ?? null;
+            const safeContacto = contacto ?? null;
             const [user] = await sql`
                 UPDATE users 
-                SET name = ${name}, dni = ${dni}, edad = ${edad}, afiliado = ${afiliado}, updated_at = NOW()
+                SET name = ${safeName}, dni = ${safeDni}, edad = ${safeEdad}, afiliado = ${safeAfiliado}, contacto = ${safeContacto}, updated_at = NOW()
                 WHERE id = ${id}
-                RETURNING id, email, name, dni, edad, afiliado, updated_at
+                RETURNING id, email, name, dni, edad, afiliado, contacto, updated_at
             `;
             return user;
         } catch (error) {
             throw new Error('Error actualizando usuario: ' + error.message);
+        }
+    }
+
+    static async getHistory(userId) {
+        try {
+            const [user] = await sql`
+                SELECT contacto FROM users WHERE id = ${userId}
+            `;
+
+            const documents = await sql`
+                SELECT id, document_type, original_name, mime_type, file_size, created_at
+                FROM user_documents
+                WHERE user_id = ${userId}
+                ORDER BY created_at DESC
+            `;
+
+            return {
+                contacto: user?.contacto || '',
+                documents
+            };
+        } catch (error) {
+            throw new Error('Error obteniendo historial: ' + error.message);
+        }
+    }
+
+    static async addHistoryDocument(userId, { documentType, contacto, file }) {
+        try {
+            if (typeof contacto === 'string') {
+                await sql`
+                    UPDATE users
+                    SET contacto = ${contacto.trim()}, updated_at = NOW()
+                    WHERE id = ${userId}
+                `;
+            }
+
+            const [document] = await sql`
+                INSERT INTO user_documents (user_id, document_type, original_name, mime_type, file_size, file_data)
+                VALUES (${userId}, ${documentType}, ${file.originalname}, ${file.mimetype}, ${file.size}, ${file.buffer})
+                RETURNING id, document_type, original_name, mime_type, file_size, created_at
+            `;
+
+            return document;
+        } catch (error) {
+            throw new Error('Error guardando documento: ' + error.message);
+        }
+    }
+
+    static async getHistoryDocumentById(documentId) {
+        try {
+            const [document] = await sql`
+                SELECT id, user_id, document_type, original_name, mime_type, file_size, file_data, created_at
+                FROM user_documents
+                WHERE id = ${documentId}
+            `;
+
+            return document;
+        } catch (error) {
+            throw new Error('Error obteniendo documento: ' + error.message);
         }
     }
 }

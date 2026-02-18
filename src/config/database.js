@@ -33,10 +33,16 @@ async function initializeDatabase() {
                 dni VARCHAR(50),
                 edad VARCHAR(10),
                 afiliado VARCHAR(100),
+                contacto VARCHAR(120),
                 avatar VARCHAR(255),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
+        `;
+
+        await sql`
+            ALTER TABLE users
+            ADD COLUMN IF NOT EXISTS contacto VARCHAR(120)
         `;
 
         console.log('✅ Tabla users creada');
@@ -66,7 +72,21 @@ async function initializeDatabase() {
             )
         `;
 
+        await sql`
+            CREATE TABLE IF NOT EXISTS user_documents (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                document_type VARCHAR(50) NOT NULL,
+                original_name VARCHAR(255) NOT NULL,
+                mime_type VARCHAR(120) NOT NULL,
+                file_size INTEGER NOT NULL,
+                file_data BYTEA NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `;
+
         console.log('✅ Tabla messages creada');
+        console.log('✅ Tabla user_documents creada');
         console.log('✅ Base de datos inicializada correctamente');
     } catch (error) {
         console.error('❌ Error inicializando BD:', error);

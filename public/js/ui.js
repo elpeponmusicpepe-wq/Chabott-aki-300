@@ -261,11 +261,16 @@ class UIManager {
             const originalHTML = submitBtn.innerHTML;
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+            const requestController = new AbortController();
+            const requestTimeout = setTimeout(() => {
+                requestController.abort();
+            }, 20000);
 
             try {
                 const response = await fetch('/api/email/contact', {
                     method: 'POST',
-                    body: formData // No poner Content-Type, FormData lo maneja automáticamente
+                    body: formData,
+                    signal: requestController.signal
                 });
 
                 const result = await response.json();
@@ -276,15 +281,24 @@ class UIManager {
                     if (fileLabelText) {
                         fileLabelText.textContent = 'Adjuntar fotos de receta (opcional)';
                     }
+                    submitBtn.innerHTML = '<i class="fas fa-check"></i> Enviado';
+                    setTimeout(() => {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalHTML;
+                    }, 800);
                 } else {
                     aki.notify(result.message || 'Error al enviar la consulta', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalHTML;
                 }
             } catch (error) {
                 console.error('Error:', error);
-                aki.notify('Error al conectar con el servidor', 'error');
-            } finally {
+                const isTimeout = error.name === 'AbortError';
+                aki.notify(isTimeout ? 'El envío demoró demasiado. Intenta nuevamente.' : 'Error al conectar con el servidor', 'error');
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalHTML;
+            } finally {
+                clearTimeout(requestTimeout);
             }
         });
     }

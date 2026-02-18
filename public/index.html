@@ -46,6 +46,10 @@
                     <i class="fas fa-user-circle"></i>
                     <span id="userNameDisplay">Usuario</span>
                 </button>
+                <button class="sidebar-btn history-btn" id="userHistoryBtn">
+                    <i class="fas fa-folder-open"></i>
+                    <span>Historial de usuario</span>
+                </button>
                 <button class="sidebar-btn settings-btn">
                     <i class="fas fa-cog"></i>
                     <span>Configuración</span>
@@ -569,6 +573,53 @@
                     </form>
                     <p class="contact-note">Recibirás respuesta en horario de atención.</p>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================== MODAL DE HISTORIAL DE USUARIO ================== -->
+    <div class="modal user-history-modal" id="user-history-modal">
+        <div class="modal-content history-content">
+            <button class="modal-close" id="close-history">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <div class="modal-header menu-header">
+                <i class="fas fa-folder-open"></i>
+                <h2>Historial de usuario</h2>
+                <p>Guarda documentos y contacto por cuenta</p>
+            </div>
+
+            <form class="history-form" id="history-form">
+                <div class="history-row">
+                    <select id="history-document-type" name="documentType" required>
+                        <option value="dni">DNI</option>
+                        <option value="afiliado">Carnet de afiliado</option>
+                        <option value="perfil">Foto de perfil</option>
+                        <option value="receta">Receta de medicamento</option>
+                        <option value="otro">Otro documento</option>
+                    </select>
+                    <input type="text" id="history-contact" name="contacto" placeholder="Contacto (teléfono o email)">
+                </div>
+
+                <div class="file-upload-container">
+                    <label for="history-file" class="file-upload-label">
+                        <i class="fas fa-upload"></i>
+                        <span id="history-file-label">Subir archivo del historial</span>
+                    </label>
+                    <input type="file" id="history-file" name="documento" accept="image/*,.pdf,.doc,.docx" required style="display: none;">
+                </div>
+
+                <button type="submit" class="contact-action-btn email" id="save-history-btn">
+                    <i class="fas fa-save"></i>
+                    Guardar en historial
+                </button>
+            </form>
+
+            <div class="history-list-wrapper">
+                <h3>Documentos guardados</h3>
+                <div class="history-empty" id="history-empty">Todavía no cargaste documentos.</div>
+                <div class="history-list" id="history-list"></div>
             </div>
         </div>
     </div>

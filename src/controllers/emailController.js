@@ -2,6 +2,15 @@ const nodemailer = require('nodemailer');
 const multer = require('multer');
 const path = require('path');
 
+const ALLOWED_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.pdf', '.doc', '.docx']);
+const ALLOWED_MIME_TYPES = new Set([
+    'image/jpeg',
+    'image/png',
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+]);
+
 function isMailtrapAddress(value = '') {
     const normalized = String(value).toLowerCase();
     return normalized.includes('mailtrap') || normalized.includes('sandbox.smtp');
@@ -28,25 +37,37 @@ const upload = multer({
     storage: storage,
     limits: { fileSize: 10 * 1024 * 1024 }, // 10MB máximo
     fileFilter: (req, file, cb) => {
-        const allowedTypes = /jpeg|jpg|png|pdf|doc|docx/;
-        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-        const mimetype = allowedTypes.test(file.mimetype);
+        const extname = path.extname(file.originalname || '').toLowerCase();
+        const isAllowedExt = ALLOWED_EXTENSIONS.has(extname);
+        const isAllowedMime = ALLOWED_MIME_TYPES.has(file.mimetype);
         
-        if (extname && mimetype) {
+        if (isAllowedExt && isAllowedMime) {
             return cb(null, true);
         }
-        cb(new Error('Solo se permiten archivos de imagen (JPG, PNG) o documentos (PDF, DOC)'));
+        cb(new Error('Solo se permiten archivos JPG, PNG, PDF, DOC o DOCX'));
     }
 }).array('archivos', 5); // Máximo 5 archivos
 
 // Crear transporte con Gmail
 const transporter = nodemailer.createTransport({
     service: 'gmail',
+    pool: true,
+    maxConnections: 3,
+    maxMessages: 100,
     auth: {
         user: process.env.GMAIL_USER,
         pass: process.env.GMAIL_APP_PASSWORD
     }
 });
+
+function sendMailWithTimeout(mailOptions, timeoutMs = 15000) {
+    return Promise.race([
+        transporter.sendMail(mailOptions),
+        new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Tiempo de envío agotado')), timeoutMs);
+        })
+    ]);
+}
 
 // Enviar email de contacto
 exports.sendContactEmail = async (req, res) => {
@@ -92,13 +113,14 @@ exports.sendContactEmail = async (req, res) => {
                 req.files.forEach(file => {
                     attachments.push({
                         filename: file.originalname,
-                        content: file.buffer
+                        content: file.buffer,
+                        contentType: file.mimetype
                     });
                 });
             }
 
             const attachmentInfo = attachments.length > 0 
-                ? `<p><strong>📎 Archivos adjuntos:</strong> ${attachments.length} archivo(s)</p>`
+                ? `<p><strong>📎 Archivos adjuntos:</strong> ${attachments.length} archivo(s) - ${attachments.map(file => file.filename).join(', ')}</p>`
                 : '';
 
             // Email al equipo de soporte
@@ -132,7 +154,7 @@ exports.sendContactEmail = async (req, res) => {
             };
 
             // Enviar email principal
-            await transporter.sendMail(mailOptions);
+            await sendMailWithTimeout(mailOptions, 15000);
 
             // Email de confirmación al usuario
             const confirmationEmail = {
@@ -161,12 +183,16 @@ exports.sendContactEmail = async (req, res) => {
                 `
             };
 
-            await transporter.sendMail(confirmationEmail);
-
-            return res.status(200).json({
+            res.status(200).json({
                 success: true,
                 message: 'Tu consulta ha sido enviada. Recibirás una respuesta pronto.'
             });
+
+            sendMailWithTimeout(confirmationEmail, 12000).catch((confirmationError) => {
+                console.error('Error enviando email de confirmación:', confirmationError.message);
+            });
+
+            return;
 
         } catch (error) {
             console.error('Error al enviar email:', error);

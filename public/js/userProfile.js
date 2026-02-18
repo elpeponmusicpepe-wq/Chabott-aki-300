@@ -3,10 +3,18 @@
 class UserProfileManager {
     constructor() {
         this.profileModal = document.getElementById('user-profile-modal');
+        this.historyModal = document.getElementById('user-history-modal');
         this.logoutBtn = document.getElementById('logout-btn');
         this.userMenuBtn = document.getElementById('userMenuBtn');
+        this.userHistoryBtn = document.getElementById('userHistoryBtn');
         this.settingsBtn = document.querySelector('.settings-btn');
         this.settingsModal = document.getElementById('settings-modal');
+        this.historyForm = document.getElementById('history-form');
+        this.historyFileInput = document.getElementById('history-file');
+        this.historyFileLabel = document.getElementById('history-file-label');
+        this.historyList = document.getElementById('history-list');
+        this.historyEmpty = document.getElementById('history-empty');
+        this.historyContactInput = document.getElementById('history-contact');
         
         this.init();
     }
@@ -14,8 +22,10 @@ class UserProfileManager {
     init() {
         console.log('🔧 Inicializando UserProfileManager...');
         console.log('- userMenuBtn:', this.userMenuBtn ? '✓' : '✗');
+        console.log('- userHistoryBtn:', this.userHistoryBtn ? '✓' : '✗');
         console.log('- settingsBtn:', this.settingsBtn ? '✓' : '✗');
         console.log('- profileModal:', this.profileModal ? '✓' : '✗');
+        console.log('- historyModal:', this.historyModal ? '✓' : '✗');
         console.log('- settingsModal:', this.settingsModal ? '✓' : '✗');
         
         // Event listeners para abrir/cerrar modales
@@ -30,6 +40,12 @@ class UserProfileManager {
             this.settingsBtn.addEventListener('click', () => {
                 console.log('⚙️ Click en botón de configuración');
                 this.openSettingsModal();
+            });
+        }
+
+        if (this.userHistoryBtn) {
+            this.userHistoryBtn.addEventListener('click', () => {
+                this.openHistoryModal();
             });
         }
 
@@ -48,10 +64,18 @@ class UserProfileManager {
             closeSettings.addEventListener('click', () => this.closeSettingsModal());
         }
 
+        const closeHistory = document.getElementById('close-history');
+        if (closeHistory) {
+            closeHistory.addEventListener('click', () => this.closeHistoryModal());
+        }
+
         // Cerrar modales al hacer click fuera
         document.addEventListener('click', (e) => {
             if (e.target === this.profileModal) {
                 this.closeProfileModal();
+            }
+            if (e.target === this.historyModal) {
+                this.closeHistoryModal();
             }
             if (e.target === this.settingsModal) {
                 this.closeSettingsModal();
@@ -62,12 +86,46 @@ class UserProfileManager {
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 this.closeProfileModal();
+                this.closeHistoryModal();
                 this.closeSettingsModal();
             }
         });
 
+        this.setupHistoryFormListeners();
+
         // Cargar datos del perfil
         this.loadProfileData();
+    }
+
+    setupHistoryFormListeners() {
+        if (this.historyFileInput && this.historyFileLabel) {
+            this.historyFileInput.addEventListener('change', () => {
+                const selectedFile = this.historyFileInput.files?.[0];
+                this.historyFileLabel.textContent = selectedFile
+                    ? `Archivo: ${selectedFile.name}`
+                    : 'Subir archivo del historial';
+            });
+        }
+
+        if (this.historyForm) {
+            this.historyForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                await this.submitHistoryForm();
+            });
+        }
+
+        if (this.historyList) {
+            this.historyList.addEventListener('click', async (event) => {
+                const button = event.target.closest('.history-open-btn');
+                if (!button) {
+                    return;
+                }
+
+                const documentId = button.getAttribute('data-document-id');
+                const documentName = button.getAttribute('data-document-name') || 'documento';
+                await this.openHistoryDocument(documentId, documentName);
+            });
+        }
     }
 
     loadProfileData() {
@@ -109,7 +167,8 @@ class UserProfileManager {
                 dni: user.dni || 'N/A',
                 email: user.email || 'correo@ejemplo.com',
                 edad: user.edad || 'N/A',
-                afiliado: user.afiliado || 'N/A'
+                afiliado: user.afiliado || 'N/A',
+                contacto: user.contacto || ''
             };
         }
 
@@ -150,6 +209,242 @@ class UserProfileManager {
         }
     }
 
+    async openHistoryModal() {
+        if (!this.historyModal) {
+            return;
+        }
+
+        this.historyModal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        await this.loadUserHistory();
+    }
+
+    closeHistoryModal() {
+        if (this.historyModal) {
+            this.historyModal.classList.remove('open');
+            document.body.style.overflow = 'auto';
+        }
+    }
+
+    getAuthToken() {
+        return localStorage.getItem('akiToken');
+    }
+
+    async loadUserHistory() {
+        const token = this.getAuthToken();
+        if (!token) {
+            if (typeof aki !== 'undefined' && aki.notify) {
+                aki.notify('Inicia sesión para ver tu historial', 'warning');
+            }
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/users/history', {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.error || 'No se pudo cargar el historial');
+            }
+
+            if (this.historyContactInput) {
+                this.historyContactInput.value = data.history?.contacto || '';
+            }
+
+            this.renderHistoryDocuments(data.history?.documents || []);
+        } catch (error) {
+            console.error('Error cargando historial:', error);
+            if (typeof aki !== 'undefined' && aki.notify) {
+                aki.notify('Error al cargar el historial de usuario', 'error');
+            }
+        }
+    }
+
+    renderHistoryDocuments(documents) {
+        if (!this.historyList || !this.historyEmpty) {
+            return;
+        }
+
+        if (!documents.length) {
+            this.historyEmpty.style.display = 'block';
+            this.historyList.innerHTML = '';
+            return;
+        }
+
+        this.historyEmpty.style.display = 'none';
+        this.historyList.innerHTML = documents.map((document) => {
+            return `
+                <div class="history-item">
+                    <div class="history-item-main">
+                        <div class="history-type">${this.getDocumentTypeLabel(document.type)}</div>
+                        <div class="history-name">${this.escapeHtml(document.originalName)}</div>
+                        <div class="history-meta">${this.formatFileSize(document.fileSize)} · ${this.formatDate(document.createdAt)}</div>
+                    </div>
+                    <button class="history-open-btn" data-document-id="${document.id}" data-document-name="${this.escapeHtml(document.originalName)}">
+                        <i class="fas fa-eye"></i>
+                        Ver
+                    </button>
+                </div>
+            `;
+        }).join('');
+    }
+
+    async submitHistoryForm() {
+        const token = this.getAuthToken();
+        if (!token) {
+            if (typeof aki !== 'undefined' && aki.notify) {
+                aki.notify('Inicia sesión para guardar tu historial', 'warning');
+            }
+            return;
+        }
+
+        if (!this.historyForm || !this.historyFileInput) {
+            return;
+        }
+
+        const selectedFile = this.historyFileInput.files?.[0];
+        if (!selectedFile) {
+            if (typeof aki !== 'undefined' && aki.notify) {
+                aki.notify('Selecciona un archivo para guardar', 'warning');
+            }
+            return;
+        }
+
+        const submitBtn = document.getElementById('save-history-btn');
+        const originalButtonHtml = submitBtn?.innerHTML || '';
+
+        const formData = new FormData();
+        formData.append('documentType', document.getElementById('history-document-type')?.value || 'otro');
+        formData.append('contacto', this.historyContactInput?.value || '');
+        formData.append('documento', selectedFile);
+
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+        }
+
+        try {
+            const response = await fetch('/api/users/history', {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.error || 'No se pudo guardar el documento');
+            }
+
+            if (typeof aki !== 'undefined' && aki.notify) {
+                aki.notify('Documento guardado en tu historial', 'success');
+            }
+
+            this.historyForm.reset();
+            if (this.historyFileLabel) {
+                this.historyFileLabel.textContent = 'Subir archivo del historial';
+            }
+            await this.loadUserHistory();
+        } catch (error) {
+            console.error('Error guardando historial:', error);
+            if (typeof aki !== 'undefined' && aki.notify) {
+                aki.notify(error.message || 'Error guardando documento', 'error');
+            }
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalButtonHtml;
+            }
+        }
+    }
+
+    async openHistoryDocument(documentId, documentName) {
+        const token = this.getAuthToken();
+        if (!token || !documentId) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/users/history/document/${documentId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('No se pudo abrir el documento');
+            }
+
+            const blob = await response.blob();
+            const objectUrl = URL.createObjectURL(blob);
+            const previewWindow = window.open(objectUrl, '_blank', 'noopener');
+
+            if (!previewWindow) {
+                const downloadLink = document.createElement('a');
+                downloadLink.href = objectUrl;
+                downloadLink.download = documentName;
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                downloadLink.remove();
+            }
+
+            setTimeout(() => URL.revokeObjectURL(objectUrl), 15000);
+        } catch (error) {
+            console.error('Error abriendo documento:', error);
+            if (typeof aki !== 'undefined' && aki.notify) {
+                aki.notify('No se pudo abrir el documento', 'error');
+            }
+        }
+    }
+
+    getDocumentTypeLabel(type) {
+        const labels = {
+            dni: 'DNI',
+            afiliado: 'Carnet de afiliado',
+            perfil: 'Foto de perfil',
+            receta: 'Receta',
+            otro: 'Otro'
+        };
+        return labels[type] || 'Documento';
+    }
+
+    formatFileSize(size = 0) {
+        if (size < 1024) return `${size} B`;
+        if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+        return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+    }
+
+    formatDate(value) {
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) {
+            return 'Fecha no disponible';
+        }
+
+        return date.toLocaleString('es-AR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    escapeHtml(value = '') {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
     openSettingsModal() {
         console.log('⚙️ Abriendo modal de configuración...');
         if (this.settingsModal) {
@@ -188,6 +483,7 @@ class UserProfileManager {
 
         // Cerrar el modal primero
         this.closeProfileModal();
+        this.closeHistoryModal();
 
         // Mostrar notificación
         if (typeof aki !== 'undefined' && aki.notify) {

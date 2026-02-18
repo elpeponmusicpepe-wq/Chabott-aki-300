@@ -16,7 +16,7 @@ function generateToken(user) {
 // Registro de usuario
 async function register(req, res) {
     try {
-        const { name, email, password, dni, edad, afiliado } = req.body;
+        const { name, email, password, dni, edad, afiliado, contacto } = req.body;
 
         // Validaciones
         if (!email || !password || !name) {
@@ -42,7 +42,8 @@ async function register(req, res) {
             password,
             dni: dni || null,
             edad: edad || null,
-            afiliado: afiliado || null
+            afiliado: afiliado || null,
+            contacto: contacto || null
         });
 
         // Generar token
@@ -58,7 +59,8 @@ async function register(req, res) {
                 email: user.email,
                 dni: user.dni,
                 edad: user.edad,
-                afiliado: user.afiliado
+                afiliado: user.afiliado,
+                contacto: user.contacto
             }
         });
     } catch (error) {
@@ -115,7 +117,8 @@ async function login(req, res) {
                 email: user.email,
                 dni: user.dni,
                 edad: user.edad,
-                afiliado: user.afiliado
+                afiliado: user.afiliado,
+                contacto: user.contacto
             }
         });
     } catch (error) {
@@ -148,7 +151,8 @@ async function getProfile(req, res) {
                 email: user.email,
                 dni: user.dni,
                 edad: user.edad,
-                afiliado: user.afiliado
+                afiliado: user.afiliado,
+                contacto: user.contacto
             }
         });
     } catch (error) {
