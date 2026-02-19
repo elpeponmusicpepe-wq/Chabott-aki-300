@@ -2,10 +2,15 @@ const { sql } = require('../config/database');
 const bcrypt = require('bcryptjs');
 
 class User {
+    static normalizeEmail(email) {
+        return String(email || '').trim().toLowerCase();
+    }
+
     // Crear un nuevo usuario
     static async create({ email, password, name, dni = null, edad = null, afiliado = null, contacto = null }) {
         try {
             const hashedPassword = await bcrypt.hash(password, 10);
+            const normalizedEmail = User.normalizeEmail(email);
             const safeDni = dni ?? null;
             const safeEdad = edad ?? null;
             const safeAfiliado = afiliado ?? null;
@@ -13,7 +18,7 @@ class User {
             
             const [user] = await sql`
                 INSERT INTO users (email, password, name, dni, edad, afiliado, contacto)
-                VALUES (${email}, ${hashedPassword}, ${name}, ${safeDni}, ${safeEdad}, ${safeAfiliado}, ${safeContacto})
+                VALUES (${normalizedEmail}, ${hashedPassword}, ${name}, ${safeDni}, ${safeEdad}, ${safeAfiliado}, ${safeContacto})
                 RETURNING id, email, name, dni, edad, afiliado, contacto, created_at
             `;
             
@@ -26,8 +31,9 @@ class User {
     // Buscar usuario por email
     static async findByEmail(email) {
         try {
+            const normalizedEmail = User.normalizeEmail(email);
             const [user] = await sql`
-                SELECT * FROM users WHERE email = ${email}
+                SELECT * FROM users WHERE LOWER(email) = LOWER(${normalizedEmail})
             `;
             return user;
         } catch (error) {

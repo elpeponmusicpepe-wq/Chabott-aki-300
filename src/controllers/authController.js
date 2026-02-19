@@ -111,9 +111,10 @@ function generateToken(user) {
 async function register(req, res) {
     try {
         const { name, email, password, dni, edad, afiliado, contacto } = req.body;
+        const normalizedEmail = String(email || '').trim().toLowerCase();
 
         // Validaciones
-        if (!email || !password || !name || !dni || !edad || !afiliado) {
+        if (!normalizedEmail || !password || !name || !dni || !edad || !afiliado) {
             return res.status(400).json({
                 success: false,
                 error: 'Nombre, email, DNI, edad, afiliado y contraseña son requeridos'
@@ -121,18 +122,19 @@ async function register(req, res) {
         }
 
         // Verificar si el usuario ya existe
-        const existingUser = await User.findByEmail(email);
+        const existingUser = await User.findByEmail(normalizedEmail);
         if (existingUser) {
-            return res.status(400).json({
+            return res.status(409).json({
                 success: false,
-                error: 'El email ya está registrado'
+                error: 'El email ya está registrado. Inicia sesión con ese correo.',
+                requiresLogin: true
             });
         }
 
         // Crear usuario
         const user = await User.create({
             name,
-            email,
+            email: normalizedEmail,
             password,
             dni: dni || null,
             edad: edad || null,
@@ -189,9 +191,10 @@ async function register(req, res) {
 async function login(req, res) {
     try {
         const { email, password, loginCode } = req.body;
+        const normalizedEmail = String(email || '').trim().toLowerCase();
 
         // Validaciones
-        if (!email || !password) {
+        if (!normalizedEmail || !password) {
             return res.status(400).json({
                 success: false,
                 error: 'Email y contraseña son requeridos'
@@ -199,7 +202,7 @@ async function login(req, res) {
         }
 
         // Buscar usuario
-        const user = await User.findByEmail(email);
+        const user = await User.findByEmail(normalizedEmail);
         if (!user) {
             return res.status(401).json({
                 success: false,

@@ -43,7 +43,7 @@ class AuthManager {
         e.preventDefault();
 
         const form = e.target;
-        const email = form.querySelector('input[name="email"]')?.value?.trim();
+        const email = form.querySelector('input[name="email"]')?.value?.trim().toLowerCase();
         const password = form.querySelector('input[name="password"]')?.value;
         const loginCode = form.querySelector('input[name="loginCode"]')?.value?.trim();
 
@@ -119,7 +119,7 @@ class AuthManager {
 
         const form = e.target;
         const name = form.querySelector('input[name="name"]')?.value.trim();
-        const email = form.querySelector('input[name="email"]')?.value.trim();
+        const email = form.querySelector('input[name="email"]')?.value.trim().toLowerCase();
         const dni = form.querySelector('input[name="dni"]')?.value.trim();
         const edad = form.querySelector('input[name="edad"]')?.value.trim();
         const afiliado = form.querySelector('input[name="afiliado"]')?.value.trim();
@@ -191,6 +191,19 @@ class AuthManager {
                     document.querySelectorAll('.auth-tab')[0].click();
                 }, 1500);
             } else {
+                if (data.requiresLogin) {
+                    const loginTab = document.querySelector('.auth-tab[data-tab="login"]');
+                    if (loginTab) {
+                        this.switchAuthTab(loginTab);
+                    }
+
+                    const loginForm = document.getElementById('loginForm');
+                    const loginEmailInput = loginForm?.querySelector('input[name="email"]');
+                    if (loginEmailInput) {
+                        loginEmailInput.value = email;
+                    }
+                }
+
                 aki.notify(data.error || 'Error al registrarse', 'error');
             }
         } catch (error) {
