@@ -40,7 +40,8 @@ function getAvailableProviders() {
 }
 
 function resolveContactEmail() {
-    return OWNER_CONTACT_EMAIL;
+    const configuredContact = (process.env.CONTACT_EMAIL || '').trim();
+    return configuredContact || OWNER_CONTACT_EMAIL;
 }
 
 // Configurar multer para archivos en memoria
