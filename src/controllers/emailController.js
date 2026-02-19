@@ -28,6 +28,17 @@ function getMailProvider() {
     return 'gmail';
 }
 
+function getAvailableProviders() {
+    const providers = [];
+    if (hasSendGridConfig()) {
+        providers.push('sendgrid');
+    }
+    if (hasGmailConfig()) {
+        providers.push('gmail');
+    }
+    return providers;
+}
+
 function resolveContactEmail() {
     return OWNER_CONTACT_EMAIL;
 }
@@ -61,25 +72,49 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-async function sendWithProvider(mailPayload, timeoutMs = 15000) {
-    const provider = getMailProvider();
+async function sendWithProvider(payloadByProvider, timeoutMs = 15000) {
+    const availableProviders = getAvailableProviders();
+    const attemptedProviders = [];
+    let lastError = null;
 
-    if (provider === 'sendgrid') {
-        sendgridMail.setApiKey(process.env.SENDGRID_API_KEY);
-        return Promise.race([
-            sendgridMail.send(mailPayload),
-            new Promise((_, reject) => {
-                setTimeout(() => reject(new Error('Tiempo de envío agotado')), timeoutMs);
-            })
-        ]);
+    for (const provider of availableProviders) {
+        const payload = payloadByProvider?.[provider];
+        if (!payload) {
+            continue;
+        }
+
+        attemptedProviders.push(provider);
+
+        try {
+            if (provider === 'sendgrid') {
+                sendgridMail.setApiKey(process.env.SENDGRID_API_KEY);
+                await Promise.race([
+                    sendgridMail.send(payload),
+                    new Promise((_, reject) => {
+                        setTimeout(() => reject(new Error('Tiempo de envío agotado')), timeoutMs);
+                    })
+                ]);
+                return { provider };
+            }
+
+            await Promise.race([
+                transporter.sendMail(payload),
+                new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('Tiempo de envío agotado')), timeoutMs);
+                })
+            ]);
+            return { provider };
+        } catch (error) {
+            lastError = error;
+            console.error(`Error enviando con ${provider}:`, error?.message || error);
+        }
     }
 
-    return Promise.race([
-        transporter.sendMail(mailPayload),
-        new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Tiempo de envío agotado')), timeoutMs);
-        })
-    ]);
+    const attempted = attemptedProviders.length > 0
+        ? attemptedProviders.join(', ')
+        : 'ninguno';
+    const baseError = lastError?.message || 'No hay proveedor disponible';
+    throw new Error(`Fallo envío (${attempted}): ${baseError}`);
 }
 
 function mapAttachmentsToSendGrid(attachments) {
@@ -105,6 +140,7 @@ exports.getEmailStatus = async (req, res) => {
         success: true,
         config: {
             provider,
+            availableProviders: getAvailableProviders(),
             hasSendGridApiKey,
             hasSendGridFromEmail,
             hasGmailUser,
@@ -267,7 +303,20 @@ exports.sendContactEmail = async (req, res) => {
                 };
 
             // Enviar email principal
-            await sendWithProvider(supportEmailPayload, 15000);
+            const supportDelivery = await sendWithProvider({
+                sendgrid: provider === 'sendgrid' ? supportEmailPayload : null,
+                gmail: provider === 'gmail' ? supportEmailPayload : {
+                    from: `"${nombre} vía AKI CHATBOT" <${process.env.GMAIL_USER}>`,
+                    to: CONTACT_EMAIL,
+                    subject: `[AKI CHATBOT] Consulta de receta de ${nombre} (${email})`,
+                    html: supportEmailHtml,
+                    replyTo: email,
+                    headers: {
+                        'X-Original-Contact-Email': email
+                    },
+                    attachments
+                }
+            }, 15000);
 
             // Email de confirmación al usuario
             const confirmationEmailPayload = provider === 'sendgrid'
@@ -289,10 +338,19 @@ exports.sendContactEmail = async (req, res) => {
 
             res.status(200).json({
                 success: true,
-                message: 'Tu consulta ha sido enviada. Recibirás una respuesta pronto.'
+                message: 'Tu consulta ha sido enviada. Recibirás una respuesta pronto.',
+                provider: supportDelivery.provider
             });
 
-            sendWithProvider(confirmationEmailPayload, 12000).catch((confirmationError) => {
+            sendWithProvider({
+                sendgrid: provider === 'sendgrid' ? confirmationEmailPayload : null,
+                gmail: provider === 'gmail' ? confirmationEmailPayload : {
+                    from: `"AKI CHATBOT" <${process.env.GMAIL_USER}>`,
+                    to: email,
+                    subject: 'Hemos recibido tu consulta - AKI CHATBOT',
+                    html: confirmationEmailHtml
+                }
+            }, 12000).catch((confirmationError) => {
                 console.error('Error enviando email de confirmación:', confirmationError.message);
             });
 
