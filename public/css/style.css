@@ -2429,6 +2429,34 @@ body {
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
+/* Paletas accesibles para modos de daltonismo */
+body.colorblind-deuteranopia {
+    --accent: #2563eb;
+    --accent-light: #60a5fa;
+    --accent-dark: #1d4ed8;
+    --success: #0891b2;
+    --danger: #ea580c;
+    --warning: #ca8a04;
+}
+
+body.colorblind-protanopia {
+    --accent: #7c3aed;
+    --accent-light: #a78bfa;
+    --accent-dark: #6d28d9;
+    --success: #0d9488;
+    --danger: #b45309;
+    --warning: #0369a1;
+}
+
+body.colorblind-tritanopia {
+    --accent: #db2777;
+    --accent-light: #f472b6;
+    --accent-dark: #be185d;
+    --success: #16a34a;
+    --danger: #dc2626;
+    --warning: #9d174d;
+}
+
 /* Botones de Acción */
 .settings-action-btn {
     width: 100%;

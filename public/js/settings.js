@@ -221,31 +221,16 @@ class SettingsManager {
     applyColorblindFilter(mode) {
         const body = document.body;
         
-        // Remover filtros anteriores
+        // Remover modos anteriores
         body.classList.remove(
             'colorblind-deuteranopia',
             'colorblind-protanopia',
             'colorblind-tritanopia'
         );
 
-        // Aplicar nuevo filtro
-        const filters = {
-            'normal': 'none',
-            'deuteranopia': 'url(#colorblind-deuteranopia)',
-            'protanopia': 'url(#colorblind-protanopia)',
-            'tritanopia': 'url(#colorblind-tritanopia)'
-        };
-
+        // Aplicar nuevo modo mediante clases CSS con paletas accesibles
         if (mode !== 'normal') {
             body.classList.add(`colorblind-${mode}`);
-            // Aplicar filtro CSS si existe
-            if (document.getElementById(filters[mode].replace('url(#', '').replace(')', ''))) {
-                body.style.filter = `${filters[mode]} ${body.style.filter || 'brightness(100%)'}`;
-            }
-        } else {
-            // Restaurar solo brightness si es normal
-            const brightness = this.settings.brightness;
-            body.style.filter = brightness !== 100 ? `brightness(${brightness}%)` : 'none';
         }
     }
 
