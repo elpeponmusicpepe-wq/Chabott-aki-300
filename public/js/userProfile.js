@@ -15,6 +15,10 @@ class UserProfileManager {
         this.historyList = document.getElementById('history-list');
         this.historyEmpty = document.getElementById('history-empty');
         this.historyContactInput = document.getElementById('history-contact');
+        this.historyFilterInfo = document.getElementById('history-filter-info');
+        this.historyFilterButtons = document.querySelectorAll('.history-filter-btn');
+        this.historyCurrentFilter = 'all';
+        this.historyDocuments = [];
         
         this.init();
     }
@@ -124,6 +128,14 @@ class UserProfileManager {
                 const documentId = button.getAttribute('data-document-id');
                 const documentName = button.getAttribute('data-document-name') || 'documento';
                 await this.openHistoryDocument(documentId, documentName);
+            });
+        }
+
+        if (this.historyFilterButtons && this.historyFilterButtons.length > 0) {
+            this.historyFilterButtons.forEach((button) => {
+                button.addEventListener('click', () => {
+                    this.setHistoryFilter(button.getAttribute('data-filter') || 'all');
+                });
             });
         }
     }
@@ -256,7 +268,8 @@ class UserProfileManager {
                 this.historyContactInput.value = data.history?.contacto || '';
             }
 
-            this.renderHistoryDocuments(data.history?.documents || []);
+            this.historyDocuments = data.history?.documents || [];
+            this.renderHistoryDocuments();
         } catch (error) {
             console.error('Error cargando historial:', error);
             if (typeof aki !== 'undefined' && aki.notify) {
@@ -265,19 +278,48 @@ class UserProfileManager {
         }
     }
 
-    renderHistoryDocuments(documents) {
+    setHistoryFilter(filter = 'all') {
+        this.historyCurrentFilter = filter;
+
+        if (this.historyFilterButtons && this.historyFilterButtons.length > 0) {
+            this.historyFilterButtons.forEach((button) => {
+                const isActive = button.getAttribute('data-filter') === filter;
+                button.classList.toggle('active', isActive);
+            });
+        }
+
+        this.renderHistoryDocuments();
+    }
+
+    renderHistoryDocuments(documents = this.historyDocuments) {
         if (!this.historyList || !this.historyEmpty) {
             return;
         }
 
-        if (!documents.length) {
+        const selectedFilter = this.historyCurrentFilter || 'all';
+        const filteredDocuments = selectedFilter === 'all'
+            ? documents
+            : documents.filter((document) => (document.type || '').toLowerCase() === selectedFilter);
+
+        if (this.historyFilterInfo) {
+            const filterLabel = selectedFilter === 'all'
+                ? 'Todos'
+                : this.getDocumentTypeLabel(selectedFilter);
+            this.historyFilterInfo.textContent = `Mostrando: ${filterLabel} (${filteredDocuments.length})`;
+        }
+
+        if (!filteredDocuments.length) {
             this.historyEmpty.style.display = 'block';
+            const emptyLabel = selectedFilter === 'all'
+                ? 'Todavía no cargaste documentos.'
+                : `No hay documentos cargados en ${this.getDocumentTypeLabel(selectedFilter)}.`;
+            this.historyEmpty.textContent = emptyLabel;
             this.historyList.innerHTML = '';
             return;
         }
 
         this.historyEmpty.style.display = 'none';
-        this.historyList.innerHTML = documents.map((document) => {
+        this.historyList.innerHTML = filteredDocuments.map((document) => {
             return `
                 <div class="history-item">
                     <div class="history-item-main">
@@ -317,9 +359,10 @@ class UserProfileManager {
 
         const submitBtn = document.getElementById('save-history-btn');
         const originalButtonHtml = submitBtn?.innerHTML || '';
+        const selectedType = document.getElementById('history-document-type')?.value || 'otro';
 
         const formData = new FormData();
-        formData.append('documentType', document.getElementById('history-document-type')?.value || 'otro');
+        formData.append('documentType', selectedType);
         formData.append('contacto', this.historyContactInput?.value || '');
         formData.append('documento', selectedFile);
 
@@ -352,6 +395,7 @@ class UserProfileManager {
                 this.historyFileLabel.textContent = 'Subir archivo del historial';
             }
             await this.loadUserHistory();
+            this.setHistoryFilter(selectedType);
         } catch (error) {
             console.error('Error guardando historial:', error);
             if (typeof aki !== 'undefined' && aki.notify) {

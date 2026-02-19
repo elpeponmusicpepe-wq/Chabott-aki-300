@@ -618,6 +618,15 @@
 
             <div class="history-list-wrapper">
                 <h3>Documentos guardados</h3>
+                <div class="history-filters" id="history-filters">
+                    <button type="button" class="history-filter-btn active" data-filter="all">Todos</button>
+                    <button type="button" class="history-filter-btn" data-filter="dni">DNI</button>
+                    <button type="button" class="history-filter-btn" data-filter="afiliado">Carnet</button>
+                    <button type="button" class="history-filter-btn" data-filter="receta">Recetas</button>
+                    <button type="button" class="history-filter-btn" data-filter="perfil">Perfil</button>
+                    <button type="button" class="history-filter-btn" data-filter="otro">Otros</button>
+                </div>
+                <div class="history-filter-info" id="history-filter-info">Mostrando: Todos</div>
                 <div class="history-empty" id="history-empty">Todavía no cargaste documentos.</div>
                 <div class="history-list" id="history-list"></div>
             </div>
