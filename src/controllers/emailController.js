@@ -18,21 +18,6 @@ function isMailtrapAddress(value = '') {
 }
 
 function resolveContactEmail() {
-    const envContactEmail = process.env.CONTACT_EMAIL;
-    const gmailUser = process.env.GMAIL_USER;
-
-    if (envContactEmail && !isMailtrapAddress(envContactEmail)) {
-        return envContactEmail;
-    }
-
-    if (envContactEmail && isMailtrapAddress(envContactEmail)) {
-        console.warn('⚠️ CONTACT_EMAIL apunta a Mailtrap. Se usará GMAIL_USER como destino.');
-    }
-
-    if (gmailUser && !isMailtrapAddress(gmailUser)) {
-        return gmailUser;
-    }
-
     return OWNER_CONTACT_EMAIL;
 }
 
@@ -77,6 +62,7 @@ exports.getEmailStatus = async (req, res) => {
             hasGmailUser,
             hasGmailPassword,
             hasContactEmail: Boolean(contactEmail),
+            effectiveRecipient: contactEmail,
             destinationDomain: contactEmail ? String(contactEmail).split('@')[1] || null : null
         }
     };
