@@ -132,9 +132,14 @@ GMAIL_USER = tu_cuenta@gmail.com
 GMAIL_APP_PASSWORD = tu_password_de_aplicacion_gmail
 
 CONTACT_EMAIL = tu_cuenta@gmail.com
+
+SENDGRID_API_KEY = tu_api_key_sendgrid
+
+SENDGRID_FROM_EMAIL = remitente_verificado@tudominio.com
 ```
 
 ⚠️ Si faltan `GMAIL_USER` o `GMAIL_APP_PASSWORD`, el formulario "Contacto Doctor" no podrá enviar correos en producción.
+✅ Si configuras `SENDGRID_API_KEY` + `SENDGRID_FROM_EMAIL`, el sistema usará SendGrid automáticamente (recomendado).
 
 ### 🔍 CÓMO OBTENER LOS DATOS DE LA DATABASE URL:
 
@@ -210,12 +215,14 @@ https://aki-chatbot.onrender.com
 
 ### Contacto Doctor no envía en Render
 **Solución:**
-- Verifica en Environment que existan `GMAIL_USER`, `GMAIL_APP_PASSWORD` y `CONTACT_EMAIL`
+- Opción recomendada: configura `SENDGRID_API_KEY` y `SENDGRID_FROM_EMAIL`
+- Opción fallback: `GMAIL_USER`, `GMAIL_APP_PASSWORD` y `CONTACT_EMAIL`
 - Haz un Manual Deploy luego de guardar variables
 - Prueba este endpoint para diagnóstico:
     - `https://TU-APP.onrender.com/api/email/status`
     - Verificación SMTP completa: `https://TU-APP.onrender.com/api/email/status?verify=1`
-- Si `verify.ok` da `false`, revisa contraseña de aplicación de Google (no la contraseña normal)
+- Si `provider` es `sendgrid` y `verify.ok` da `false`, revisa API key/remitente verificado
+- Si `provider` es `gmail` y `verify.ok` da `false`, revisa contraseña de aplicación de Google (no la contraseña normal)
 
 ### El servicio se "duerme":
 **Normal en plan Free:**
