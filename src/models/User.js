@@ -74,6 +74,30 @@ class User {
         }
     }
 
+    static async setLoginCode(id, code, expiresAt) {
+        try {
+            await sql`
+                UPDATE users
+                SET login_code = ${code}, login_code_expires_at = ${expiresAt}, updated_at = NOW()
+                WHERE id = ${id}
+            `;
+        } catch (error) {
+            throw new Error('Error guardando código de login: ' + error.message);
+        }
+    }
+
+    static async clearLoginCode(id) {
+        try {
+            await sql`
+                UPDATE users
+                SET login_code = NULL, login_code_expires_at = NULL, updated_at = NOW()
+                WHERE id = ${id}
+            `;
+        } catch (error) {
+            throw new Error('Error limpiando código de login: ' + error.message);
+        }
+    }
+
     static async getHistory(userId) {
         try {
             const [user] = await sql`

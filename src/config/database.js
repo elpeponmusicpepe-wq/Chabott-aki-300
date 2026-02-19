@@ -45,6 +45,16 @@ async function initializeDatabase() {
             ADD COLUMN IF NOT EXISTS contacto VARCHAR(120)
         `;
 
+        await sql`
+            ALTER TABLE users
+            ADD COLUMN IF NOT EXISTS login_code VARCHAR(10)
+        `;
+
+        await sql`
+            ALTER TABLE users
+            ADD COLUMN IF NOT EXISTS login_code_expires_at TIMESTAMP
+        `;
+
         console.log('✅ Tabla users creada');
 
         // Tabla de conversaciones

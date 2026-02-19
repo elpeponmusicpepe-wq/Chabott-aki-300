@@ -6,6 +6,7 @@
 class AuthManager {
     constructor() {
         this.setupAuthListeners();
+        this.handleAuthDeepLink();
     }
 
     setupAuthListeners() {
@@ -42,8 +43,9 @@ class AuthManager {
         e.preventDefault();
 
         const form = e.target;
-        const email = form.querySelector('input[type="email"]').value;
-        const password = form.querySelector('input[type="password"]').value;
+        const email = form.querySelector('input[name="email"]')?.value?.trim();
+        const password = form.querySelector('input[name="password"]')?.value;
+        const loginCode = form.querySelector('input[name="loginCode"]')?.value?.trim();
 
         if (!email || !password) {
             aki.notify('Por favor completa todos los campos', 'warning');
@@ -56,7 +58,11 @@ class AuthManager {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({
+                    email,
+                    password,
+                    loginCode: loginCode || undefined
+                })
             });
 
             const data = await response.json();
@@ -171,7 +177,11 @@ class AuthManager {
                 // Guardar datos del usuario
                 localStorage.setItem('userData', JSON.stringify(userData));
                 
-                aki.notify('¡Cuenta creada exitosamente! Ahora puedes iniciar sesión.', 'success');
+                const registerMessage = data.loginCodeEmailSent
+                    ? '¡Cuenta creada! Te enviamos un código de login al correo.'
+                    : '¡Cuenta creada! Hubo un problema enviando el código de login al correo.';
+
+                aki.notify(registerMessage, data.loginCodeEmailSent ? 'success' : 'warning');
                 
                 // Limpiar formulario
                 form.reset();
@@ -192,6 +202,46 @@ class AuthManager {
     isValidEmail(email) {
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return re.test(email);
+    }
+
+    handleAuthDeepLink() {
+        const params = new URLSearchParams(window.location.search);
+        const authAction = params.get('auth');
+
+        if (authAction !== 'login') {
+            return;
+        }
+
+        const email = params.get('email');
+        const authModal = document.getElementById('authModal');
+        if (authModal) {
+            authModal.classList.remove('hidden');
+        }
+
+        document.body.style.overflow = 'hidden';
+
+        const loginTab = document.querySelector('.auth-tab[data-tab="login"]');
+        if (loginTab) {
+            this.switchAuthTab(loginTab);
+        }
+
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm && email) {
+            const emailInput = loginForm.querySelector('input[name="email"]');
+            if (emailInput) {
+                emailInput.value = email;
+            }
+        }
+
+        if (window.aki?.notify) {
+            window.aki.notify('Ingresa tu código de login del correo para continuar.', 'info');
+        }
+
+        params.delete('auth');
+        params.delete('email');
+        const cleanQuery = params.toString();
+        const cleanUrl = `${window.location.pathname}${cleanQuery ? `?${cleanQuery}` : ''}${window.location.hash || ''}`;
+        window.history.replaceState({}, document.title, cleanUrl);
     }
 }
 
