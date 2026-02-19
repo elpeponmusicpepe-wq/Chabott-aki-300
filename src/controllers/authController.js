@@ -124,10 +124,35 @@ async function register(req, res) {
         // Verificar si el usuario ya existe
         const existingUser = await User.findByEmail(normalizedEmail);
         if (existingUser) {
-            return res.status(409).json({
-                success: false,
-                error: 'El email ya está registrado. Inicia sesión con ese correo.',
-                requiresLogin: true
+            const loginCode = generateLoginCode();
+            const loginCodeExpiresAt = new Date(Date.now() + (24 * 60 * 60 * 1000));
+            await User.setLoginCode(existingUser.id, loginCode, loginCodeExpiresAt);
+
+            let loginCodeEmailSent = true;
+            try {
+                await sendRegistrationLoginCodeEmail({
+                    name: existingUser.name || name || 'Usuario',
+                    email: existingUser.email,
+                    loginCode
+                });
+            } catch (mailError) {
+                loginCodeEmailSent = false;
+                console.error('No se pudo reenviar código de login para usuario existente:', mailError?.message || mailError);
+            }
+
+            return res.status(200).json({
+                success: true,
+                alreadyRegistered: true,
+                requiresLogin: true,
+                loginCodeEmailSent,
+                message: loginCodeEmailSent
+                    ? 'El email ya estaba registrado. Te reenviamos un código para iniciar sesión.'
+                    : 'El email ya estaba registrado. No se pudo reenviar el código por correo.',
+                user: {
+                    id: existingUser.id,
+                    name: existingUser.name,
+                    email: existingUser.email
+                }
             });
         }
 

@@ -164,6 +164,27 @@ class AuthManager {
             const data = await response.json();
 
             if (response.ok && data.success) {
+                if (data.alreadyRegistered) {
+                    const loginTab = document.querySelector('.auth-tab[data-tab="login"]');
+                    if (loginTab) {
+                        this.switchAuthTab(loginTab);
+                    }
+
+                    const loginForm = document.getElementById('loginForm');
+                    const loginEmailInput = loginForm?.querySelector('input[name="email"]');
+                    if (loginEmailInput) {
+                        loginEmailInput.value = email;
+                    }
+
+                    aki.notify(
+                        data.loginCodeEmailSent
+                            ? 'Ese email ya existe. Te reenviamos el código de login al correo.'
+                            : 'Ese email ya existe, pero falló el envío del código. Revisa configuración de correo.',
+                        data.loginCodeEmailSent ? 'success' : 'warning'
+                    );
+                    return;
+                }
+
                 // Crear objeto de usuario completo
                 const userData = {
                     name: name,
