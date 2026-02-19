@@ -10,6 +10,7 @@ const ALLOWED_MIME_TYPES = new Set([
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 ]);
+const OWNER_CONTACT_EMAIL = 'roronoazoroxoro@gmail.com';
 
 function isMailtrapAddress(value = '') {
     const normalized = String(value).toLowerCase();
@@ -28,7 +29,11 @@ function resolveContactEmail() {
         console.warn('⚠️ CONTACT_EMAIL apunta a Mailtrap. Se usará GMAIL_USER como destino.');
     }
 
-    return gmailUser;
+    if (gmailUser && !isMailtrapAddress(gmailUser)) {
+        return gmailUser;
+    }
+
+    return OWNER_CONTACT_EMAIL;
 }
 
 // Configurar multer para archivos en memoria
@@ -159,9 +164,9 @@ exports.sendContactEmail = async (req, res) => {
 
             // Email al equipo de soporte
             const mailOptions = {
-                from: `"AKI CHATBOT" <${process.env.GMAIL_USER}>`,
+                from: `"${nombre} vía AKI CHATBOT" <${process.env.GMAIL_USER}>`,
                 to: CONTACT_EMAIL,
-                subject: `[AKI CHATBOT] Consulta de receta de ${nombre}`,
+                subject: `[AKI CHATBOT] Consulta de receta de ${nombre} (${email})`,
                 html: `
                     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                         <div style="background-color: #0066cc; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
@@ -170,6 +175,7 @@ exports.sendContactEmail = async (req, res) => {
                         <div style="padding: 20px; background-color: #f5f5f5;">
                             <p><strong>Nombre:</strong> ${nombre}</p>
                             <p><strong>Email de respuesta:</strong> ${email}</p>
+                            <p><strong>Responder directamente:</strong> usa "Responder" en este correo para contestar al usuario.</p>
                             <p><strong>Medicación/Receta:</strong> ${medicacion}</p>
                             ${attachmentInfo}
                             <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
@@ -184,6 +190,9 @@ exports.sendContactEmail = async (req, res) => {
                     </div>
                 `,
                 replyTo: email,
+                headers: {
+                    'X-Original-Contact-Email': email
+                },
                 attachments: attachments
             };
 
