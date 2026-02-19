@@ -152,10 +152,13 @@
             <!-- Registro -->
             <form class="auth-form" id="registerForm" data-form="register">
                 <h2>Únete a AKI</h2>
-                <input type="text" placeholder="Nombre completo" required>
-                <input type="email" placeholder="Email" required>
-                <input type="password" placeholder="Contraseña" required>
-                <input type="password" placeholder="Confirmar contraseña" required>
+                <input type="text" name="name" placeholder="Nombre completo" required>
+                <input type="email" name="email" placeholder="Email" required>
+                <input type="text" name="dni" placeholder="DNI" required>
+                <input type="number" name="edad" placeholder="Edad" min="1" max="120" required>
+                <input type="text" name="afiliado" placeholder="Número de afiliado" required>
+                <input type="password" name="password" placeholder="Contraseña" required>
+                <input type="password" name="confirmPassword" placeholder="Confirmar contraseña" required>
                 <button type="submit" class="auth-btn">Crear cuenta</button>
                 <p class="terms">Al registrarte, aceptas nuestros términos de servicio</p>
             </form>

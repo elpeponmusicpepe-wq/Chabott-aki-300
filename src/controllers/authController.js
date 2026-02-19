@@ -19,10 +19,10 @@ async function register(req, res) {
         const { name, email, password, dni, edad, afiliado, contacto } = req.body;
 
         // Validaciones
-        if (!email || !password || !name) {
+        if (!email || !password || !name || !dni || !edad || !afiliado) {
             return res.status(400).json({
                 success: false,
-                error: 'Nombre, email y contraseña son requeridos'
+                error: 'Nombre, email, DNI, edad, afiliado y contraseña son requeridos'
             });
         }
 

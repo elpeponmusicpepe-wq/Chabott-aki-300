@@ -112,14 +112,16 @@ class AuthManager {
         e.preventDefault();
 
         const form = e.target;
-        const inputs = form.querySelectorAll('input');
-        const name = inputs[0].value;
-        const email = inputs[1].value;
-        const password = inputs[2].value;
-        const confirmPassword = inputs[3].value;
+        const name = form.querySelector('input[name="name"]')?.value.trim();
+        const email = form.querySelector('input[name="email"]')?.value.trim();
+        const dni = form.querySelector('input[name="dni"]')?.value.trim();
+        const edad = form.querySelector('input[name="edad"]')?.value.trim();
+        const afiliado = form.querySelector('input[name="afiliado"]')?.value.trim();
+        const password = form.querySelector('input[name="password"]')?.value;
+        const confirmPassword = form.querySelector('input[name="confirmPassword"]')?.value;
 
         // Validaciones
-        if (!name || !email || !password || !confirmPassword) {
+        if (!name || !email || !dni || !edad || !afiliado || !password || !confirmPassword) {
             aki.notify('Por favor completa todos los campos', 'warning');
             return;
         }
@@ -139,13 +141,18 @@ class AuthManager {
             return;
         }
 
+        if (!/^\d+$/.test(edad) || Number(edad) < 1 || Number(edad) > 120) {
+            aki.notify('Edad inválida', 'error');
+            return;
+        }
+
         try {
             const response = await fetch('/api/auth/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ name, email, password })
+                body: JSON.stringify({ name, email, dni, edad, afiliado, password })
             });
 
             const data = await response.json();
@@ -156,9 +163,9 @@ class AuthManager {
                     name: name,
                     nombre: name,
                     email: email,
-                    dni: data.user?.dni || 'N/A',
-                    edad: data.user?.edad || 'N/A',
-                    afiliado: data.user?.afiliado || 'N/A'
+                    dni: data.user?.dni || dni,
+                    edad: data.user?.edad || edad,
+                    afiliado: data.user?.afiliado || afiliado
                 };
                 
                 // Guardar datos del usuario
