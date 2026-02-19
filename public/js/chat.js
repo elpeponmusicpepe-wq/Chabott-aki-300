@@ -213,10 +213,6 @@ class ChatManager {
         // Formulario
         chatForm.addEventListener('submit', (e) => this.handleSubmit(e));
 
-        // Botones de acción
-        document.getElementById('attachBtn').addEventListener('click', () => this.handleAttach());
-        document.getElementById('voiceBtn').addEventListener('click', () => this.handleVoice());
-
         // Prompts rápidos
         document.addEventListener('click', (e) => {
             if (e.target.closest('.prompt-card')) {
@@ -352,62 +348,6 @@ Por favor intenta de nuevo en unos momentos. Mi equipo de desarrollo está traba
     resizeTextarea(textarea) {
         textarea.style.height = 'auto';
         textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
-    }
-
-    handleAttach() {
-        aki.notify('Sistema de adjuntos en desarrollo', 'info');
-        // TODO: Implementar carga de archivos
-    }
-
-    async handleVoice() {
-        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-            aki.notify('Tu navegador no soporta reconocimiento de voz', 'error');
-            return;
-        }
-
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        const recognition = new SpeechRecognition();
-
-        recognition.lang = 'es-ES';
-        recognition.continuous = false;
-        recognition.interimResults = true;
-
-        const voiceBtn = document.getElementById('voiceBtn');
-        const originalContent = voiceBtn.innerHTML;
-
-        voiceBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-        voiceBtn.disabled = true;
-
-        recognition.onresult = (event) => {
-            let transcript = '';
-            for (let i = event.resultIndex; i < event.results.length; i++) {
-                transcript += event.results[i][0].transcript;
-            }
-
-            if (event.isFinal) {
-                document.getElementById('messageInput').value = transcript;
-                document.getElementById('messageInput').focus();
-                aki.notify(`Escuché: "${transcript}"`, 'success');
-            }
-        };
-
-        recognition.onerror = (event) => {
-            aki.notify(`Error de voz: ${event.error}`, 'error');
-        };
-
-        recognition.onend = () => {
-            voiceBtn.innerHTML = originalContent;
-            voiceBtn.disabled = false;
-        };
-
-        try {
-            recognition.start();
-            aki.notify('Escuchando...', 'info');
-        } catch (error) {
-            console.error('Error iniciando reconocimiento de voz:', error);
-            voiceBtn.innerHTML = originalContent;
-            voiceBtn.disabled = false;
-        }
     }
 }
 
